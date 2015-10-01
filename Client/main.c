@@ -36,7 +36,7 @@ int main(int argc , char *argv[])
         printf("Enter message : ");
         scanf("%s" , message);
 	printf("%d", sizeof(message));
-	if(message!="quit"){
+	if(strncmp(message,"quit",4) != 0){
 		//Send some data
        		if( send(sock , message , strlen(message) , 0) < 0)
         	{
