@@ -33,12 +33,10 @@ int main(int argc , char *argv[])
     //keep communicating with server
     while(1)
     {
-	//memset(message, 0, sizeof message);
-	strcpy(message, clo);
-	printf("In Memory : %s\n", server_reply);
+	memset(message, 0, sizeof message);
 	printf("Enter message : ");
         scanf("%s\0" , message);
-	if(strncmp(message,"quit",4) != 0){
+		if(strncmp(message,"quit",4) != 0){
 		//Send some data
        		if( send(sock , message , strlen(message) , 0) < 0)
         	{
@@ -54,7 +52,7 @@ int main(int argc , char *argv[])
         	}
          
         	printf("Server reply : %s\n", server_reply);
-        	//puts(server_reply);
+        	memset(server_reply, 0, 2000);
     	}
 	else{
 		break;
