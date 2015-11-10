@@ -45,12 +45,13 @@ int main(int argc , char *argv[])
     }
     puts("Connection accepted");
      
+    bzero(client_message, sizeof client_message);
     //Receive a message from client
     while( (read_size = recv(client_sock , client_message , 2000 , 0)) > 0 ){
         //Send the message back to client
 	write(client_sock , client_message , strlen(client_message));
 	printf("before memset: %s\n", client_message);
-	memset(client_message, 0, 2000);
+	bzero(client_message, sizeof client_message);
 	printf("after memset: %s\n", client_message);
     }
      
