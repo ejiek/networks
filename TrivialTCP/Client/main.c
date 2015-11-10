@@ -36,7 +36,7 @@ int main(int argc , char *argv[])
 	bzero(message, sizeof message);
 	printf("Enter message : ");
         scanf("%s" , message);
-		if(strncmp(message,"quit",4) != 0){
+	while(strncmp(message,"quit",4) != 0){
 		//Send some data
        		if( send(sock , message , strlen(message) , 0) < 0)
         	{
@@ -54,20 +54,16 @@ int main(int argc , char *argv[])
          
         	printf("Server reply : %s\n", server_reply);
     	}
-	else{
-		break;
-		puts("win!!!!!");
-	}
     } 
     if(shutdown(sock, SHUT_RDWR) == 0){    
     	if(close(sock) == 0){
-		puts("win");
+		puts("Socket closed");
 	}
 	else{
-		puts("you alac");
+		puts("Failed to close socket");
 		return 1;
 	}
     }
-    else puts("you flac");
+    else puts("Failed to shutdown soket");
     return 0;
 }
