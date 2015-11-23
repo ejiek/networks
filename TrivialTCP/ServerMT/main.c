@@ -6,6 +6,11 @@
 #include<unistd.h>    
 #include<pthread.h>
  
+#define SCK "\x1B[34m"
+#define TRD "\x1B[33m"
+#define ERR "\x1B[31m"
+#define RST "\033[0m"
+
 void *connection_handler(void *);
 
 int main(int argc , char *argv[])
@@ -16,9 +21,9 @@ int main(int argc , char *argv[])
     //Create socket
     socket_desc = socket(AF_INET , SOCK_STREAM , 0);
     if (socket_desc == -1){
-        puts("Could not create socket");
+        puts(ERR"Main socket: could not create"RST);
     }
-    puts("Socket created");
+    puts(SCK"Main socket: created"RST);
      
     //Prepare the sockaddr_in structure
     server.sin_family = AF_INET;
@@ -28,25 +33,25 @@ int main(int argc , char *argv[])
     //Bind
     if( bind(socket_desc,(struct sockaddr *)&server , sizeof(server)) < 0){
         //print the error message
-        puts("bind failed. Error");
+        puts(ERR"Main socket: could not bind"RST);
         return 1;
     }
-    puts("bind done");
+    puts(SCK"Main socket: binded"RST);
      
     //Listen
     listen(socket_desc , 3);
      
     //Accept and incoming connection
-    puts("Waiting for incoming connections...");
+    puts(SCK"Main socket: waiting"RST);
     c = sizeof(struct sockaddr_in);
      
     //accept connection from an incoming client
     while( (client_sock = accept(socket_desc, (struct sockaddr *)&client, (socklen_t*)&c)) ){
         if (client_sock < 0){
-            puts("Fail: accept");
+            puts(ERR"Main socket: failed to accept connection"RST);
             return 1;
         }
-        puts("Connection accepted");
+        puts(SCK"Main socket: connection accepted"RST);
          
         pthread_t sniffer_thread;
         new_sock = malloc(1);
@@ -54,26 +59,26 @@ int main(int argc , char *argv[])
          
         if( pthread_create( &sniffer_thread , NULL , connection_handler , (void*) new_sock) < 0)
         {
-            perror("could not create thread");
+            puts(ERR"Main thread: failed to create new thread"RST);
             return 1;
         }
-         
+        puts(TRD"Main thread: new thread created"RST);
         //Now join the thread , so that we dont terminate before the thread
         //pthread_join( sniffer_thread , NULL);
-        puts("Handler assigned");
+        puts(TRD"Main thread: Handler assigned"RST);
     }
     if(shutdown(socket_desc, SHUT_RDWR) == 0){
-	puts("Socket is down");
+	puts(SCK"Main socket: down"RST);
 	if(close(socket_desc) == 0){
-	    puts("Socket is closed");
+	    puts(SCK"Main socket: closed"RST);
 	}
 	else{
-	    puts("Fail: cannot close socket");
+	    puts(ERR"Main socket: failed to close "RST);
 	    return 1;
 	}
     }
     else{
-        puts("Fail: cannot shut socket down");
+        puts(ERR"Main socket: failed to shut down"RST);
     	return 1;
     }
     
@@ -98,24 +103,24 @@ void *connection_handler(void *socket_desc)
 
 
     if(read_size == 0){
-        puts("Client disconnected");
+        puts(SCK"Subsocket: client disconnected"RST);
 	if(shutdown(client_sock, SHUT_RDWR) == 0){
-		puts("Socket is down");
+		puts(SCK"Subsocket: down"RST);
 	    	if(close(client_sock) == 0){
-			puts("Socket is closed");
+			puts(SCK"Subsocket: closed"RST);
 		}
 		else{
-			puts("Fail: cannot close socket");
+			puts(ERR"Subsocket: failed to close"RST);
 			goto END;
 		}
 	}
 	else{
-		 puts("Fail: cannot shut socket down");
+		 puts(ERR"Subsocket: failed to shut down"RST);
     		goto END;
    	}
     }
     else if(read_size == -1){
-        puts("recv failed");
+        puts(ERR"Subsocket: failed to recive"RST);
     }
          
     //Free the socket pointer
