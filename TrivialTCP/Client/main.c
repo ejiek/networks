@@ -2,6 +2,10 @@
 #include<string.h>    //strlen
 #include<sys/socket.h>    //socket
 #include<arpa/inet.h> //inet_addr
+
+#define SERV   "\x1B[35m"
+#define CLIENT "\x1B[36m"
+#define RESET  "\033[0m"
  
 int main(int argc , char *argv[])
 {
@@ -28,14 +32,15 @@ int main(int argc , char *argv[])
         return 1;
     }
      
-    puts("Connected\n");
+    puts("Connected");
      
     //keep communicating with server
     while(1)
     {
 	bzero(message, sizeof message);
-	printf("Enter message : ");
-        scanf("%s" , message);
+	printf(CLIENT "Enter message : ");
+	fgets (message, sizeof message, stdin);
+        printf(RESET);
 	if(strncmp(message,"quit",4) != 0){
 		//Send some data
        		if( send(sock , message , strlen(message) , 0) < 0)
@@ -52,7 +57,7 @@ int main(int argc , char *argv[])
 	            	break;
         	}
          
-        	printf("Server reply : %s\n", server_reply);
+        	printf(SERV "Server reply : %s" RESET, server_reply);
     	}
 	else break;
     } 
