@@ -36,7 +36,7 @@ int main(int argc , char *argv[])
 	bzero(message, sizeof message);
 	printf("Enter message : ");
         scanf("%s" , message);
-	while(strncmp(message,"quit",4) != 0){
+	if(strncmp(message,"quit",4) != 0){
 		//Send some data
        		if( send(sock , message , strlen(message) , 0) < 0)
         	{
@@ -54,6 +54,7 @@ int main(int argc , char *argv[])
          
         	printf("Server reply : %s\n", server_reply);
     	}
+	else break;
     } 
     if(shutdown(sock, SHUT_RDWR) == 0){    
     	if(close(sock) == 0){
