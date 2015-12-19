@@ -103,7 +103,7 @@ void *connection_handler(void *socket_desc)
 
 
     if(read_size == 0){
-        puts(SCK"Subsocket: client disconnected"RST);
+        puts(TRD"Subthread: client disconnected"RST);
 	if(shutdown(client_sock, SHUT_RDWR) == 0){
 		puts(SCK"Subsocket: down"RST);
 	    	if(close(client_sock) == 0){
