@@ -235,24 +235,23 @@ int shut(int id){
     for(int i=0; i < 100; i++){
         if(client_d[i].id == id){
 	        if(shutdown(client_d[i].socket, SHUT_RDWR) == 0){
-		        puts(SCK"Subsocket: down"RST);
+		        printf(SCK"Subsocket[%d]: down"RST"\n", id);
 	    	    if(close(client_d[i].socket) == 0){
-			        puts(SCK"Subsocket: closed"RST);
+			        printf(SCK"Subsocket[%d]: closed"RST"\n", id);
 		        }
 		        else{
-			        puts(ERR"Subsocket: failed to close"RST);
+			        printf(ERR"Subsocket[%d]: failed to close"RST"\n", id);
 			        goto SH_END;
 		        }
 	        }
 	        else{
-		        puts(ERR"Subsocket: failed to shut down"RST);
+		        printf(ERR"Subsocket[%d]: failed to shut down"RST"\n", id);
     		    goto SH_END;
    	        }
         }
     }
 SH_END:    
     pthread_mutex_unlock(&lock);
-    puts("shut termination phase");
     return 0;
 }
 
