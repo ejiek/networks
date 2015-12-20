@@ -103,7 +103,7 @@ int main(int argc , char *argv[])
         puts(ERR"Main socket: failed to shut down"RST);
     	return 1;
     }
-
+    
     if (pthread_join(accept_thread , (void**)&status_addr) != 0){
         puts("Main thread: can't join accept thread");
     }
@@ -161,7 +161,7 @@ CH_END:
     }
     pthread_mutex_unlock(&lock);  
     //Free the socket pointer
-    free(socket_desc);
+    //free(socket_desc);
 }
 
 void *accept_handler(void *socket_desc){
@@ -188,12 +188,13 @@ void *accept_handler(void *socket_desc){
             new_sock = malloc(1);
             *new_sock = client_sock;
         
-            add_tdescriptor(id, sniffer_thread);
             add_sdescriptor(id, client);
             if( pthread_create( &sniffer_thread , NULL , connection_handler , (void*) new_sock) < 0){
                 puts(ERR"Main thread: failed to create new thread"RST);
                 goto AH_END;
             }
+            add_tdescriptor(id, sniffer_thread);
+
             printf(TRD"Main thread: new thread created, id = %d, port = %d"RST"\n", id, ntohs(client.sin_port));
         }
     }
@@ -210,7 +211,7 @@ AH_END:
 	        pthread_join( client_d[i].thread , NULL);
         }
     }
-    free(socket_desc);
+    //free(socket_desc);
 }
 
 int add_descriptor(int socket){
@@ -256,21 +257,22 @@ int add_sdescriptor(int id, struct sockaddr_in client){
 int shut(int id){
     int i = id - 1;// correc id to real position
     pthread_mutex_lock(&lock);
-    if(shutdown(client_d[i].socket, SHUT_RDWR) == 0){
-    printf(SCK"Subsocket[%d]: down"RST"\n", id);
-	    if(close(client_d[i].socket) == 0){
-        printf(SCK"Subsocket[%d]: closed"RST"\n", id);
-	    }
-	    else{
-		    printf(ERR"Subsocket[%d]: failed to close"RST"\n", id);
-		    goto SH_END;
-	    }
+    if(client_d[i].socket != 0){
+        if(shutdown(client_d[i].socket, SHUT_RDWR) == 0){
+        printf(SCK"Subsocket[%d]: down"RST"\n", id);
+    	    if(close(client_d[i].socket) == 0){
+            printf(SCK"Subsocket[%d]: closed"RST"\n", id);
+    	    }
+    	    else{
+    		    printf(ERR"Subsocket[%d]: failed to close"RST"\n", id);
+    		    goto SH_END;
+    	    }
+        }
+        else{
+	        printf(ERR"Subsocket[%d]: failed to shut down"RST"\n", id);
+   	        goto SH_END;
+        }
     }
-    else{
-	    printf(ERR"Subsocket[%d]: failed to shut down"RST"\n", id);
-   	    goto SH_END;
-    }
-
 SH_END:    
     pthread_mutex_unlock(&lock);
     return 0;
