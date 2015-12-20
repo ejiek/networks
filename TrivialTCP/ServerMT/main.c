@@ -17,6 +17,7 @@ struct client_descriptor
 	pthread_t thread;
 };
 struct client_descriptor client_d[100];
+struct sockaddr_in client;
 pthread_mutex_t lock;
 
 void *connection_handler(void *);
@@ -167,7 +168,7 @@ void *accept_handler(void *socket_desc){
     //accept connection from an incoming client
     //int client_descriptor[100];
     int client_sock, c , *new_sock, id;
-    struct sockaddr_in client;
+    //struct sockaddr_in client;
     c = sizeof(struct sockaddr_in);
 
     while( (client_sock = accept(socket_desc, (struct sockaddr *)&client, (socklen_t*)&c)) ){
@@ -259,7 +260,7 @@ void list(){
     pthread_mutex_lock(&lock);
     for(int i=0; i < 100; i++){
         if(client_d[i].socket != 0){
-            printf("ID = %d, descriptor = %d\n", client_d[i].id , client_d[i].socket);
+            printf(TRD"ID = %d, port = %d"RST"\n", client_d[i].id , ntohs(client.sin_port));
         }
     }
     pthread_mutex_unlock(&lock);
