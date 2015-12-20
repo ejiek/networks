@@ -152,7 +152,6 @@ void *connection_handler(void *socket_desc)
          
 
 CH_END:
-    puts("connection_handler termination phase");
     pthread_mutex_lock(&lock);
     for(int i=0; i < 100; i++){
         if(client_d[i].socket == client_sock){
@@ -199,9 +198,19 @@ void *accept_handler(void *socket_desc){
         }
     }
 AH_END:
-    //Now join the thread , so that we dont terminate before the thread
-    //pthread_join( sniffer_thread , NULL);
-    puts("accept_handler termination phase");
+
+    for(int i=0; i < 100; i++){
+        if(client_d[i].socket != 0){
+	        shut(client_d[i].id);
+        }
+    }
+
+    for(int i=0; i < 100; i++){
+        if(client_d[i].socket != 0){
+	        pthread_join( client_d[i].thread , NULL);
+        }
+    }
+    free(socket_desc);
 }
 
 int add_descriptor(int socket){
@@ -245,25 +254,23 @@ int add_sdescriptor(int id, struct sockaddr_in client){
 }
 
 int shut(int id){
+    int i = id - 1;// correc id to real position
     pthread_mutex_lock(&lock);
-    for(int i=0; i < 100; i++){
-        if(client_d[i].id == id){
-	        if(shutdown(client_d[i].socket, SHUT_RDWR) == 0){
-		        printf(SCK"Subsocket[%d]: down"RST"\n", id);
-	    	    if(close(client_d[i].socket) == 0){
-			        printf(SCK"Subsocket[%d]: closed"RST"\n", id);
-		        }
-		        else{
-			        printf(ERR"Subsocket[%d]: failed to close"RST"\n", id);
-			        goto SH_END;
-		        }
-	        }
-	        else{
-		        printf(ERR"Subsocket[%d]: failed to shut down"RST"\n", id);
-    		    goto SH_END;
-   	        }
-        }
+    if(shutdown(client_d[i].socket, SHUT_RDWR) == 0){
+    printf(SCK"Subsocket[%d]: down"RST"\n", id);
+	    if(close(client_d[i].socket) == 0){
+        printf(SCK"Subsocket[%d]: closed"RST"\n", id);
+	    }
+	    else{
+		    printf(ERR"Subsocket[%d]: failed to close"RST"\n", id);
+		    goto SH_END;
+	    }
     }
+    else{
+	    printf(ERR"Subsocket[%d]: failed to shut down"RST"\n", id);
+   	    goto SH_END;
+    }
+
 SH_END:    
     pthread_mutex_unlock(&lock);
     return 0;
