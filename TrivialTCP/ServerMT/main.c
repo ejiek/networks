@@ -15,15 +15,16 @@ struct client_descriptor
 {
 	int	id, socket;
 	pthread_t thread;
+    struct sockaddr_in client;
 };
 struct client_descriptor client_d[100];
-struct sockaddr_in client;
 pthread_mutex_t lock;
 
 void *connection_handler(void *);
 void *accept_handler(void *);
 int add_descriptor(int);
 int add_tdescriptor(int , pthread_t);
+int add_sdescriptor(int , struct sockaddr_in);
 int shut(int id);
 void list();
 
@@ -168,7 +169,7 @@ void *accept_handler(void *socket_desc){
     //accept connection from an incoming client
     //int client_descriptor[100];
     int client_sock, c , *new_sock, id;
-    //struct sockaddr_in client;
+    struct sockaddr_in client;
     c = sizeof(struct sockaddr_in);
 
     while( (client_sock = accept(socket_desc, (struct sockaddr *)&client, (socklen_t*)&c)) ){
@@ -189,7 +190,7 @@ void *accept_handler(void *socket_desc){
             *new_sock = client_sock;
         
             add_tdescriptor(id, sniffer_thread);
-
+            add_sdescriptor(id, client);
             if( pthread_create( &sniffer_thread , NULL , connection_handler , (void*) new_sock) < 0){
                 puts(ERR"Main thread: failed to create new thread"RST);
                 goto AH_END;
@@ -230,6 +231,19 @@ int add_tdescriptor(int id, pthread_t sniffer_thread){
     return 0;
 }
 
+int add_sdescriptor(int id, struct sockaddr_in client){
+    pthread_mutex_lock(&lock);
+    for(int i=0; i < 100; i++){
+        if(client_d[i].id == id){
+            client_d[i].client = client;
+            break;
+        }
+    }
+    pthread_mutex_unlock(&lock);
+    if(id == 0){return 1;}
+    return 0;
+}
+
 int shut(int id){
     pthread_mutex_lock(&lock);
     for(int i=0; i < 100; i++){
@@ -259,7 +273,7 @@ void list(){
     pthread_mutex_lock(&lock);
     for(int i=0; i < 100; i++){
         if(client_d[i].socket != 0){
-            printf(TRD"ID = %d, port = %d"RST"\n", client_d[i].id , ntohs(client.sin_port));
+            printf(TRD"ID = %d, port = %d"RST"\n", client_d[i].id , ntohs(client_d[i].client.sin_port));
         }
     }
     pthread_mutex_unlock(&lock);
