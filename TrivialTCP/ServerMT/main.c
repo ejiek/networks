@@ -80,8 +80,7 @@ int main(int argc , char *argv[])
         bzero(message, sizeof message);
         fgets (message, sizeof message, stdin);
 	    if(strncmp(message,"quit",4) == 0){ break;}
-        if(strncmp(message,"shut ",5) == 0){ 
-            printf("ID to shut down: %d\n", strtoul(message+5, NULL,10));
+        if(strncmp(message,"shut ",5) == 0){
             shut(strtoul(message+5, NULL,10));
         }
         if(strncmp(message,"list",4) == 0){
