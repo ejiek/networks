@@ -33,12 +33,15 @@ int main(int argc , char *argv[])
     }
      
     puts("Connected");
-     
+    
+    printf(SERV "Colour of Server messages \n" RESET);
+    printf(CLIENT "Colour of Your messages \n\n" RESET);
     //keep communicating with server
     while(1)
     {
+	bzero(server_reply, sizeof server_reply);
 	bzero(message, sizeof message);
-	printf(CLIENT "Enter message : ");
+	printf(CLIENT "$ ");
 	fgets (message, sizeof message, stdin);
         printf(RESET);
 	if(strncmp(message,"quit",4) != 0){
@@ -48,16 +51,14 @@ int main(int argc , char *argv[])
             		puts("Send failed");
             		return 1;
         	}
-         
         	//Receive a reply from the server
-		bzero(server_reply, sizeof server_reply);
 		if( recv(sock , server_reply , 2000 , 0) < 0)
         	{
         	    	puts("recv failed");
 	            	break;
         	}
          
-        	printf(SERV "Server reply : %s" RESET, server_reply);
+        	printf(SERV "%s" RESET, server_reply);
     	}
 	else break;
     } 
