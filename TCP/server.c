@@ -36,6 +36,8 @@ int shut(int id);
 void list();
 int readline(int , char *, int);
 
+void list_themes(char *);
+
 int main(int argc , char *argv[])
 {
     int socket_desc , status_addr;
@@ -125,15 +127,19 @@ void *connection_handler(void *socket_desc)
     int client_sock = *(int*)socket_desc;
     int read_size;
     char client_message[2000];
+    char reply[2000];
 
     bzero(client_message, sizeof client_message);
     //Receive a message from client
     //while( (read_size = recv(client_sock , client_message , 2000 , 0)) > 0 )
     while( (read_size = readline(client_sock , client_message , 2000)) > 0 )
     {
-        //Send the message back to client
-	write(client_sock , client_message , strlen(client_message));
+    if(strncmp(client_message,"LIST",4) == 0){ list_themes(reply);}
+    else if(strncmp(client_message,"da",2) == 0){ strcpy(reply, "da\n");}
+    else strcpy(reply, "WRONG COMMAN\n");
+	write(client_sock , reply , strlen(reply));
 	bzero(client_message, sizeof client_message);
+    bzero(reply, sizeof reply);
     }
 
 
@@ -311,4 +317,13 @@ int readline(int fd, char *buf, int len){
     }
     buf[ len - 1 ] = '\0';
     return -1;
+}
+
+void list_themes(char *reply){
+    char tmp[50];
+    strcpy(reply, "Themes:\n");
+    for(int i=0; i < sizeof(themes) / sizeof(themes[0]); i++){
+        sprintf(tmp, "[%d] %s\n", i, themes[i]);
+        strcat(reply, tmp);
+    }
 }
