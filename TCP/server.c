@@ -20,11 +20,12 @@ struct client_descriptor
 struct client_descriptor client_d[100];
 pthread_mutex_t lock;
 pthread_mutex_t nock;
+
 struct piece_of_news{
     int id, theme;
     char text[5000];
 };
-
+struct piece_of_news pofn[100];
 const char *themes[4] = {"Tech ", "Science", "Movies", "Cars"};
 
 void *connection_handler(void *);
@@ -37,6 +38,8 @@ void list();
 int readline(int , char *, int);
 
 void list_themes(char *);
+int add_po_news(char *);
+int show_news(char * , char *);
 
 int main(int argc , char *argv[])
 {
@@ -135,6 +138,15 @@ void *connection_handler(void *socket_desc)
     while( (read_size = readline(client_sock , client_message , 2000)) > 0 )
     {
     if(strncmp(client_message,"LIST",4) == 0){ list_themes(reply);}
+    else if(strncmp(client_message, "ADDN", 4) == 0){ 
+        if(add_po_news(client_message) < 0){
+            strcpy(reply, "Unable to add this piece of news: no free space\n");
+        }
+        else strcpy(reply, "This piece of news has been added!\n");
+    }
+    else if(strncmp(client_message, "SHOW", 4) == 0){
+        
+    }
     else if(strncmp(client_message,"da",2) == 0){ strcpy(reply, "da\n");}
     else strcpy(reply, "WRONG COMMAN\n");
 	write(client_sock , reply , strlen(reply));
@@ -326,4 +338,36 @@ void list_themes(char *reply){
         sprintf(tmp, "[%d] %s\n", i, themes[i]);
         strcat(reply, tmp);
     }
+}
+
+int add_po_news(char *message){
+    int theme_id;
+    printf("symbol: \"%s\"\n", message[4]);
+    if(message[4] == ' '){
+        theme_id = strtoul(message+5, NULL,10);
+        printf("theme id: %d\n", theme_id);
+    }
+    pthread_mutex_lock(&nock);
+    for (int i = 0; i < 100; i++){
+        if(pofn[i].text[0]  = '\0'){
+            strcpy(pofn[i].text, message+6);
+            pofn[i].theme = theme_id;
+            goto ADD_END;
+        }
+    }
+    pthread_mutex_unlock(&nock);
+    return -1;
+ADD_END:
+    pthread_mutex_unlock(&nock);
+    return 0;
+}
+
+int show_news(char *message, char *reply){
+    int news_id;
+    news_id = strtoul(message+5, NULL,10);
+    if(pofn[news_id].text[0]=='\0') {return -1;}
+    pthread_mutex_lock(&nock);
+    strcpy(pofn[news_id].text, reply);
+    pthread_mutex_unlock(&nock);
+    return 0;
 }
