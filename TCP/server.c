@@ -19,6 +19,13 @@ struct client_descriptor
 };
 struct client_descriptor client_d[100];
 pthread_mutex_t lock;
+pthread_mutex_t nock;
+struct piece_of_news{
+    int id, theme;
+    char text[5000];
+};
+
+const char *themes[4] = {"Tech ", "Science", "Movies", "Cars"};
 
 void *connection_handler(void *);
 void *accept_handler(void *);
