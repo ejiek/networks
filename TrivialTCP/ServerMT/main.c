@@ -27,6 +27,7 @@ int add_tdescriptor(int , pthread_t);
 int add_sdescriptor(int , struct sockaddr_in);
 int shut(int id);
 void list();
+int readline(int , char *, int);
 
 int main(int argc , char *argv[])
 {
@@ -120,7 +121,8 @@ void *connection_handler(void *socket_desc)
 
     bzero(client_message, sizeof client_message);
     //Receive a message from client
-    while( (read_size = recv(client_sock , client_message , 2000 , 0)) > 0 )
+    //while( (read_size = recv(client_sock , client_message , 2000 , 0)) > 0 )
+    while( (read_size = readline(client_sock , client_message , 2000)) > 0 )
     {
         //Send the message back to client
 	write(client_sock , client_message , strlen(client_message));
@@ -285,4 +287,21 @@ void list(){
         }
     }
     pthread_mutex_unlock(&lock);
+}
+
+int readline(int fd, char *buf, int len){
+    char tmp = ' ';
+    char *p = &tmp;
+    int rc;
+    for(int i = 0; i < len; i++){
+        rc = recv( fd, p, 1, 0 );
+        if( rc == 0 ) return 0;
+        buf[i] = *p;
+        if( (int)*p == '\n'){
+            //buf[i] = '\0';
+            return i + 1;
+        }
+    }
+    buf[ len - 1 ] = '\0';
+    return -1;
 }
