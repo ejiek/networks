@@ -342,14 +342,11 @@ void list_themes(char *reply){
 
 int add_po_news(char *message){
     int theme_id;
-    printf("symbol: \"%s\"\n", message[4]);
-    if(message[4] == ' '){
-        theme_id = strtoul(message+5, NULL,10);
-        printf("theme id: %d\n", theme_id);
-    }
+    if(message[4] != ' '){ return -2;}
+    theme_id = strtoul(message+5, NULL,10);
     pthread_mutex_lock(&nock);
     for (int i = 0; i < 100; i++){
-        if(pofn[i].text[0]  = '\0'){
+        if(pofn[i].text[0]  == '\0'){
             strcpy(pofn[i].text, message+6);
             pofn[i].theme = theme_id;
             goto ADD_END;
