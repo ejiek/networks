@@ -145,7 +145,7 @@ void *connection_handler(void *socket_desc)
         else strcpy(reply, "This piece of news has been added!\n");
     }
     else if(strncmp(client_message, "SHOW", 4) == 0){
-        
+        show_news(client_message, reply);
     }
     else if(strncmp(client_message,"da",2) == 0){ strcpy(reply, "da\n");}
     else strcpy(reply, "WRONG COMMAN\n");
@@ -347,7 +347,7 @@ int add_po_news(char *message){
     pthread_mutex_lock(&nock);
     for (int i = 0; i < 100; i++){
         if(pofn[i].text[0]  == '\0'){
-            strcpy(pofn[i].text, message+6);
+            strcpy(pofn[i].text, message+7);
             pofn[i].theme = theme_id;
             goto ADD_END;
         }
@@ -364,7 +364,7 @@ int show_news(char *message, char *reply){
     news_id = strtoul(message+5, NULL,10);
     if(pofn[news_id].text[0]=='\0') {return -1;}
     pthread_mutex_lock(&nock);
-    strcpy(pofn[news_id].text, reply);
+    strcpy(reply, pofn[news_id].text);
     pthread_mutex_unlock(&nock);
     return 0;
 }
