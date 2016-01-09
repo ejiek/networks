@@ -38,8 +38,10 @@ void list();
 int readline(int , char *, int);
 
 void list_themes(char *);
+int list_news(int, char *);
 int add_po_news(char *);
 int show_news(char * , char *);
+void help(char *);
 
 int main(int argc , char *argv[])
 {
@@ -135,23 +137,25 @@ void *connection_handler(void *socket_desc)
     bzero(client_message, sizeof client_message);
     //Receive a message from client
     //while( (read_size = recv(client_sock , client_message , 2000 , 0)) > 0 )
-    while( (read_size = readline(client_sock , client_message , 2000)) > 0 )
-    {
-    if(strncmp(client_message,"LIST",4) == 0){ list_themes(reply);}
-    else if(strncmp(client_message, "ADDN", 4) == 0){ 
-        if(add_po_news(client_message) < 0){
-            strcpy(reply, "Unable to add this piece of news: no free space\n");
+    while( (read_size = readline(client_sock , client_message , 2000)) > 0 ){
+        if(strncmp(client_message,"LIST",4) == 0){
+            if(client_message[5] == '\0') list_themes(reply);
+            else list_news(strtoul(client_message+5, NULL,10) ,reply);
         }
-        else strcpy(reply, "This piece of news has been added!\n");
-    }
-    else if(strncmp(client_message, "SHOW", 4) == 0){
-        show_news(client_message, reply);
-    }
-    else if(strncmp(client_message,"da",2) == 0){ strcpy(reply, "da\n");}
-    else strcpy(reply, "WRONG COMMAN\n");
-	write(client_sock , reply , strlen(reply));
-	bzero(client_message, sizeof client_message);
-    bzero(reply, sizeof reply);
+        else if(strncmp(client_message, "ADDN", 4) == 0){ 
+            if(add_po_news(client_message) < 0){
+                strcpy(reply, "Unable to add this piece of news: no free space\n");
+            }
+            else strcpy(reply, "This piece of news has been added!\n");
+        }
+        else if(strncmp(client_message, "SHOW", 4) == 0){
+            show_news(client_message, reply);
+        }
+        else if(strncmp(client_message,"HELP",2) == 0){ help(reply);}
+        else strcpy(reply, "WRONG COMMAN\n");
+	    write(client_sock , reply , strlen(reply));
+	    bzero(client_message, sizeof client_message);
+        bzero(reply, sizeof reply);
     }
 
 
@@ -340,6 +344,36 @@ void list_themes(char *reply){
     }
 }
 
+int list_news(int theme_id, char *reply){
+    int is_any = 0;
+    char tmp[20];
+    printf("Theme id: %d\n", theme_id);
+    strcpy(reply, "News:\n");
+    for(int i=0; i < 100; i++){
+        if(pofn[i].text[0] != '\0' && pofn[i].theme == theme_id){
+            is_any++;
+            sprintf(tmp, "[%d] ", i);
+            strncpy(tmp+4 , pofn[i].text, sizeof(tmp)-4);
+            if(tmp[sizeof tmp - 1] != '\0'){
+                if (sizeof(tmp) < strlen(tmp)){
+                    tmp[sizeof(tmp) - 1] = '\0';
+                    tmp[sizeof(tmp) - 2] = '\n';
+                }
+                else{
+                    tmp[strlen(tmp) - 1] = '\0';
+                    tmp[strlen(tmp) - 2] = '\n';
+                }
+            }
+            printf("sprintf and \\n correction: %s", tmp);
+            strcat(reply, tmp);
+            printf("Reply now: %s", reply);
+            bzero(tmp, sizeof tmp);
+        }
+    }
+    if(is_any > 0) return 0;
+    return -1;
+}
+
 int add_po_news(char *message){
     int theme_id;
     if(message[4] != ' '){ return -2;}
@@ -367,4 +401,8 @@ int show_news(char *message, char *reply){
     strcpy(reply, pofn[news_id].text);
     pthread_mutex_unlock(&nock);
     return 0;
+}
+
+void help(char *reply){
+    strcpy(reply, "Available commands:\nLIST - prints a list of themes\nADDN [theme id] [text] - adds piece of news to the theme\nHELP - prints this help\nSHOW [id] - prints the piece of news\n");
 }
