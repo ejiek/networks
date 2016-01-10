@@ -95,12 +95,13 @@ int main(int argc , char *argv[])
         bzero(message, sizeof message);
         fgets (message, sizeof message, stdin);
 	    if(strncmp(message,"quit",4) == 0){ break;}
-        if(strncmp(message,"shut ",5) == 0){
+        else if(strncmp(message,"shut ",5) == 0){
             shut(strtoul(message+5, NULL,10));
         }
-        if(strncmp(message,"list",4) == 0){
+        else if(strncmp(message,"list",4) == 0){
             list();
         }
+        else printf(ERR"Wrong command"RST"\n");
     } 
 
     if(shutdown(socket_desc, SHUT_RDWR) == 0){
