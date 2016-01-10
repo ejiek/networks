@@ -26,7 +26,12 @@ struct piece_of_news{
     char text[5000];
 };
 struct piece_of_news pofn[100];
-const char *themes[4] = {"Tech ", "Science", "Movies", "Cars"};
+
+struct theme{
+    char name[20];
+};
+struct theme themes[100];
+//const char *themes[] = {"Tech ", "Science", "Movies", "Cars"};
 
 void *connection_handler(void *);
 void *accept_handler(void *);
@@ -35,6 +40,7 @@ int add_tdescriptor(int , pthread_t);
 int add_sdescriptor(int , struct sockaddr_in);
 int shut(int id);
 void list();
+int add_theme(char *);
 int readline(int , char *, int);
 
 void list_themes(char *);
@@ -48,6 +54,16 @@ int main(int argc , char *argv[])
     int socket_desc , status_addr;
     struct sockaddr_in server;
     char message[1000];
+    
+    //hardcoded
+    strcpy(themes[0].name, "Tech");
+    strcpy(themes[1].name, "Science");
+    strcpy(themes[2].name, "Movies");
+    strcpy(themes[3].name, "Cars");
+    
+    for(int i = 0; i < 4; i++){
+        puts(themes[i].name);
+    }
     
     //initialize strucutre
     pthread_mutex_lock(&lock);    
@@ -100,6 +116,10 @@ int main(int argc , char *argv[])
         }
         else if(strncmp(message,"list",4) == 0){
             list();
+        }
+        else if(strncmp(message,"add ",4) == 0){
+            if (add_theme(message) < 0){ puts(ERR"Failed to add theme"RST);}
+            else puts(TRD"Theme added"RST);
         }
         else printf(ERR"Wrong command"RST"\n");
     } 
@@ -319,6 +339,19 @@ void list(){
     pthread_mutex_unlock(&lock);
 }
 
+int add_theme(char *message){
+    for(int i = 0; i < 100; i++){
+        if (themes[i].name[0] == '\0'){
+            strncpy(themes[i].name ,message+4, 20);
+            themes[i].name[strlen(themes[i].name)-1] = '\0';
+            goto AT_END;
+        }
+    }
+    return -1;    
+AT_END:
+    return 0;
+}
+
 int readline(int fd, char *buf, int len){
     char tmp = ' ';
     char *p = &tmp;
@@ -337,11 +370,13 @@ int readline(int fd, char *buf, int len){
 }
 
 void list_themes(char *reply){
+    int i=0;
     char tmp[50];
     strcpy(reply, "Themes:\n");
-    for(int i=0; i < sizeof(themes) / sizeof(themes[0]); i++){
-        sprintf(tmp, "[%d] %s\n", i, themes[i]);
+    while(i < 100 && (themes[i].name[0] != '\0')){
+        sprintf(tmp, "[%d] %s\n", i, themes[i].name);
         strcat(reply, tmp);
+        i++;
     }
 }
 
