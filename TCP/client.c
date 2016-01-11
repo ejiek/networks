@@ -52,7 +52,7 @@ int main(int argc , char *argv[])
                 break;
         	}
         	//Receive a reply from the server
-		    if( recv(sock , server_reply , 2000 , 0) < 0){
+		    if( recv(sock , server_reply , 2000 , 0) < 1){
         	    puts("recv failed");
 	            break;
         	}
@@ -62,14 +62,15 @@ int main(int argc , char *argv[])
 	    else break;
     } 
     if(shutdown(sock, SHUT_RDWR) == 0){    
-    	if(close(sock) == 0){
-		    puts("Socket closed");
-	    }
-	    else{
-		    puts("Failed to close socket");
-		    err = 2;
-	    }
+        puts("Socket is shuted down o.0");
     }
     else puts("Failed to shutdown soket");
+    if(close(sock) == 0){
+	    puts("Socket closed");
+	}
+	else{
+	    puts("Failed to close socket");
+	    err = 2;
+	}
     return err;
 }
