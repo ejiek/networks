@@ -61,12 +61,12 @@ int main(int argc , char *argv[])
     } 
     if(shutdown(sock, SHUT_RDWR) == 0){    
     	if(close(sock) == 0){
-		puts("Socket closed");
-	}
-	else{
-		puts("Failed to close socket");
-		return 1;
-	}
+		    puts("Socket closed");
+	    }
+	    else{
+		    puts("Failed to close socket");
+		    return 1;
+	    }
     }
     else puts("Failed to shutdown soket");
     return 0;
