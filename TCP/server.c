@@ -383,7 +383,6 @@ void list_themes(char *reply){
 int list_news(int theme_id, char *reply){
     int is_any = 0;
     char tmp[20];
-    printf("Theme id: %d\n", theme_id);
     strcpy(reply, "News:\n");
     for(int i=0; i < 100; i++){
         if(pofn[i].text[0] != '\0' && pofn[i].theme == theme_id){
@@ -400,9 +399,7 @@ int list_news(int theme_id, char *reply){
                     tmp[strlen(tmp) - 2] = '\n';
                 }
             }
-            printf("sprintf and \\n correction: %s", tmp);
             strcat(reply, tmp);
-            printf("Reply now: %s", reply);
             bzero(tmp, sizeof tmp);
         }
     }
