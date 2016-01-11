@@ -61,10 +61,6 @@ int main(int argc , char *argv[])
     strcpy(themes[2].name, "Movies");
     strcpy(themes[3].name, "Cars");
     
-    for(int i = 0; i < 4; i++){
-        puts(themes[i].name);
-    }
-    
     //initialize strucutre
     pthread_mutex_lock(&lock);    
     for (int i = 0; i < 100; i++){
