@@ -10,6 +10,7 @@
 int main(int argc , char *argv[])
 {
     int sock;
+    int err = 0; // 0 - no error
     struct sockaddr_in server;
     char message[1000] , server_reply[2000];
      
@@ -47,7 +48,8 @@ int main(int argc , char *argv[])
 		//Send some data
        		if( send(sock , message , strlen(message) , 0) < 0){
                 puts("Send failed");
-                return 1;
+                err = 1;
+                break;
         	}
         	//Receive a reply from the server
 		    if( recv(sock , server_reply , 2000 , 0) < 0){
@@ -65,9 +67,9 @@ int main(int argc , char *argv[])
 	    }
 	    else{
 		    puts("Failed to close socket");
-		    return 1;
+		    err = 2;
 	    }
     }
     else puts("Failed to shutdown soket");
-    return 0;
+    return err;
 }
