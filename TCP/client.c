@@ -1,7 +1,9 @@
 #include<stdio.h> //printf
 #include<string.h>    //strlen
+#include<stdlib.h>
 #include<sys/socket.h>    //socket
 #include<arpa/inet.h> //inet_addr
+#include<unistd.h>   
 
 #define SERV   "\x1B[35m"
 #define CLIENT "\x1B[36m"
@@ -9,11 +11,26 @@
  
 int main(int argc , char *argv[])
 {
-    int sock;
+    int sock, server_port;
     int err = 0; // 0 - no error
     struct sockaddr_in server;
-    char message[1000] , server_reply[2000];
-     
+    char message[1000] , server_reply[2000], server_addr[16], server_tmp_port[6];
+    
+    puts("Insert server addres (default 127.0.0.1)");
+    fgets(server_addr, sizeof server_addr, stdin);
+    puts("Insert server port (default 8888)");
+    fgets(server_tmp_port, sizeof server_tmp_port, stdin);
+    server_port = strtoul(server_tmp_port, NULL,10);
+    
+    if(server_addr[0] == '\n'){
+        strcpy(server_addr, "127.0.0.1");
+    }
+    
+    if(server_addr[strlen(server_addr)-1] == '\n') server_addr[strlen(server_addr)-1] = '\0';
+    
+    if(server_port == 0){
+        server_port = 8888;
+    }
     //Create socket
     sock = socket(AF_INET , SOCK_STREAM , 0);
     if (sock == -1)
@@ -22,9 +39,9 @@ int main(int argc , char *argv[])
     }
     puts("Socket created");
      
-    server.sin_addr.s_addr = inet_addr("127.0.0.1");
+    server.sin_addr.s_addr = inet_addr( server_addr );
     server.sin_family = AF_INET;
-    server.sin_port = htons( 8888 );
+    server.sin_port = htons( server_port );
  
     //Connect to remote server
     if (connect(sock , (struct sockaddr *)&server , sizeof(server)) < 0)
