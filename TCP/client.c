@@ -37,30 +37,27 @@ int main(int argc , char *argv[])
     printf(SERV "Colour of Server messages \n" RESET);
     printf(CLIENT "Colour of Your messages \n\n" RESET);
     //keep communicating with server
-    while(1)
-    {
-	bzero(server_reply, sizeof server_reply);
-	bzero(message, sizeof message);
-	printf(CLIENT "$ ");
-	fgets (message, sizeof message, stdin);
+    while(1){
+	    bzero(server_reply, sizeof server_reply);
+	    bzero(message, sizeof message);
+	    printf(CLIENT "$ ");
+	    fgets (message, sizeof message, stdin);
         printf(RESET);
-	if(strncmp(message,"quit",4) != 0){
+	    if(strncmp(message,"quit",4) != 0){
 		//Send some data
-       		if( send(sock , message , strlen(message) , 0) < 0)
-        	{
-            		puts("Send failed");
-            		return 1;
+       		if( send(sock , message , strlen(message) , 0) < 0){
+                puts("Send failed");
+                return 1;
         	}
         	//Receive a reply from the server
-		if( recv(sock , server_reply , 2000 , 0) < 0)
-        	{
-        	    	puts("recv failed");
-	            	break;
+		    if( recv(sock , server_reply , 2000 , 0) < 0){
+        	    puts("recv failed");
+	            break;
         	}
          
         	printf(SERV "%s" RESET, server_reply);
     	}
-	else break;
+	    else break;
     } 
     if(shutdown(sock, SHUT_RDWR) == 0){    
     	if(close(sock) == 0){
