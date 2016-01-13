@@ -5,6 +5,8 @@
 #include<arpa/inet.h> //inet_addr
 #include<unistd.h>
 
+#define BUFLEN 512
+
 #define SERV   "\x1B[35m"
 #define CLIENT "\x1B[36m"
 #define RESET  "\033[0m"
@@ -13,7 +15,8 @@ int main(int argc , char *argv[])
 {
     int sock, server_port;
     struct sockaddr_in server;
-    char message[1000] , server_reply[2000], server_addr[16], server_tmp_port[6];
+    int slen = sizeof(server);
+    char message[BUFLEN] , server_reply[BUFLEN], server_addr[16], server_tmp_port[6];
 
     puts("Insert server addres (default 127.0.0.1)");
     fgets(server_addr, sizeof server_addr, stdin);
@@ -32,7 +35,7 @@ int main(int argc , char *argv[])
     }
 
     //Create socket
-    sock = socket(AF_INET , SOCK_STREAM , 0);
+    sock = socket(AF_INET , SOCK_DGRAM, IPPROTO_UDP);
     if (sock == -1)
     {
         printf("Could not create socket");
@@ -42,6 +45,13 @@ int main(int argc , char *argv[])
     server.sin_addr.s_addr = inet_addr( server_addr );
     server.sin_family = AF_INET;
     server.sin_port = htons( server_port );
+
+    if(sendto(sock, "HEL", BUFLEN, 0, &server, slen)==-1)
+        puts("failed to send Hello");
+    if(recvfrom(sock, server_reply, BUFLEN, 0, &server, &slen)==-1)
+        puts("failed to recieve a Hello answer");
+    printf("Received packet from %s:%d\n",
+        inet_ntoa(server.sin_addr), ntohs(server.sin_port));
 
     //Connect to remote server
     if (connect(sock , (struct sockaddr *)&server , sizeof(server)) < 0)
@@ -70,7 +80,7 @@ int main(int argc , char *argv[])
             		return 1;
         	}
         	//Receive a reply from the server
-		if( recv(sock , server_reply , 2000 , 0) < 0)
+		if( recv(sock , server_reply , BUFLEN , 0) < 0)
         	{
         	    	puts("recv failed");
 	            	break;

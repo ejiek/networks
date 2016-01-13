@@ -6,6 +6,8 @@
 #include<unistd.h>
 #include<pthread.h>
 
+#define BUFLEN 512
+
 #define SCK "\x1B[34m"
 #define TRD "\x1B[33m"
 #define ERR "\x1B[31m"
@@ -15,7 +17,7 @@ struct client_descriptor
 {
 	int	socket;
 	pthread_t thread;
-    struct sockaddr_in client, server;
+    struct sockaddr_in client;
 };
 struct client_descriptor client_d[100];
 pthread_mutex_t lock;
@@ -35,13 +37,14 @@ struct theme themes[100];
 
 void *connection_handler(void *);
 void *accept_handler(void *);
-int add_descriptor(int);
+int add_sockaddr(int, struct sockaddr_in);
 int add_tdescriptor(int , pthread_t);
-int add_sdescriptor(int , struct sockaddr_in);
 int shut(int id);
 void list();
 int add_theme(char *);
 int readline(int , char *, int);
+int free_client_desc();
+sub_connect(int, int);
 
 void list_themes(char *);
 int list_news(int, char *);
@@ -62,7 +65,7 @@ int main(int argc , char *argv[])
     strcpy(themes[3].name, "Cars");
 
     //Create socket
-    socket_desc = socket(AF_INET , SOCK_STREAM , 0);
+    socket_desc = socket(AF_INET , SOCK_DGRAM, IPPROTO_UDP);
     if (socket_desc == -1){
         puts(ERR"Main socket: could not create"RST);
     }
@@ -80,9 +83,6 @@ int main(int argc , char *argv[])
         return 1;
     }
     puts(SCK"Main socket: binded"RST);
-
-    //Listen
-    listen(socket_desc , 3);
 
     //Accept and incoming connection
     puts(SCK"Main socket: waiting"RST);
@@ -135,18 +135,21 @@ int main(int argc , char *argv[])
     return 0;
 }
 
-void *connection_handler(void *socket_desc)
-{
+void *connection_handler(void *the_id){
     //Get the socket descriptor
-    int client_sock = *(int*)socket_desc;
-    int read_size;
-    char client_message[2000];
-    char reply[2000];
+    int id = *(int*)the_id;
+    int read_size, sock;
+    char client_message[BUFLEN];
+    char reply[BUFLEN];
 
+    if ((sock=socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP))==-1)
+    puts(ERR"Subsocket: failed to create"RST);
+    if(sub_connect(id, sock) == -1)
+    puts(ERR"Subsocket: failed to connect"RST);
     bzero(client_message, sizeof client_message);
     //Receive a message from client
-    //while( (read_size = recv(client_sock , client_message , 2000 , 0)) > 0 )
-    while( (read_size = readline(client_sock , client_message , 2000)) > 0 ){
+    while( (read_size = recv(sock , client_message , BUFLEN , 0)) > 0 ){
+    //while( (read_size = readline(client_sock , client_message , 2000)) > 0 ){
         if(strncmp(client_message,"LIST",4) == 0){
             if(client_message[5] == '\0') list_themes(reply);
             else list_news(strtoul(client_message+5, NULL,10) ,reply);
@@ -162,17 +165,17 @@ void *connection_handler(void *socket_desc)
         }
         else if(strncmp(client_message,"HELP",2) == 0){ help(reply);}
         else strcpy(reply, "WRONG COMMAN\n");
-	    write(client_sock , reply , strlen(reply));
-	    bzero(client_message, sizeof client_message);
+	       write(sock , reply , strlen(reply));
+	       bzero(client_message, sizeof client_message);
         bzero(reply, sizeof reply);
     }
 
 
     if(read_size == 0){
         puts(TRD"Subthread: client disconnected"RST);
-	    if(shutdown(client_sock, SHUT_RDWR) == 0){
+	    if(shutdown(sock, SHUT_RDWR) == 0){
 		    puts(SCK"Subsocket: down"RST);
-	    	if(close(client_sock) == 0){
+	    	if(close(sock) == 0){
 			    puts(SCK"Subsocket: closed"RST);
 		    }
 		    else{
@@ -193,7 +196,7 @@ void *connection_handler(void *socket_desc)
 CH_END:
     pthread_mutex_lock(&lock);
     for(int i=0; i < 100; i++){
-        if(client_d[i].socket == client_sock){
+        if(client_d[i].socket == sock){
             client_d[i].socket = 0;
             break;
         }
@@ -206,35 +209,36 @@ CH_END:
 void *accept_handler(void *socket_desc){
     //accept connection from an incoming client
     //int client_descriptor[100];
-    int client_sock, c , *new_sock, id;
-    struct sockaddr_in client;
-    c = sizeof(struct sockaddr_in);
+    int c , id, *new_id;
+    char buf[BUFLEN];
+    struct sockaddr_in new_client;
+    c = sizeof(new_client);
 
-    while( (client_sock = accept(socket_desc, (struct sockaddr *)&client, (socklen_t*)&c)) ){
-        if (client_sock < 0){
-            puts(ERR"Main socket: failed to accept connection"RST);
-            goto AH_END;
-        }
-
+AH_RPT:
+    while( recvfrom(socket_desc, buf, BUFLEN, 0, &new_client, &c) ){
         puts(SCK"Main socket: connection accepted"RST);
 
-        id = add_descriptor(client_sock);
-        if (id == -1){
+        id = free_client_desc();
+        if (id < 0){
             puts(ERR"Main socket: all subsockets are busy"RST);
         }
         else{
-            pthread_t sniffer_thread;
-            new_sock = malloc(1);
-            *new_sock = client_sock;
-
-            add_sdescriptor(id, client);
-            if( pthread_create( &sniffer_thread , NULL , connection_handler , (void*) new_sock) < 0){
-                puts(ERR"Main thread: failed to create new thread"RST);
-                goto AH_END;
+            if (add_sockaddr(id ,new_client) < 0){
+                puts(ERR"Main socket: all subsockets are busy"RST);
             }
-            add_tdescriptor(id, sniffer_thread);
+            else{
+                pthread_t sniffer_thread;
+                new_id = malloc(1);
+                *new_id = id;
 
-            printf(TRD"Main thread: new thread created, id = %d, port = %d"RST"\n", id, ntohs(client.sin_port));
+                if( pthread_create( &sniffer_thread , NULL , connection_handler , (void*) new_id) < 0){
+                    puts(ERR"Main thread: failed to create new thread"RST);
+                    goto AH_RPT;
+                }
+                add_tdescriptor(id, sniffer_thread);
+
+                printf(TRD"Main thread: new thread created, id = %d, port = %d"RST"\n", id, ntohs(new_client.sin_port));
+            }
         }
     }
 AH_END:
@@ -253,18 +257,24 @@ AH_END:
     //free(socket_desc);
 }
 
-int add_descriptor(int socket){
-    int id = -1; // 0 -  all sockets are busy
+int free_client_desc(){
+    int id = -1;
     pthread_mutex_lock(&lock);
     for(int i=0; i < 100; i++){
         if(client_d[i].socket == 0){
-            client_d[i].socket = socket;
             id = i;
             break;
         }
     }
     pthread_mutex_unlock(&lock);
     return id;
+}
+
+int add_sockaddr(int id, struct sockaddr_in client){
+    pthread_mutex_lock(&lock);
+    client_d[id].client = client;
+    pthread_mutex_unlock(&lock);
+    return 0;
 }
 
 int add_tdescriptor(int id, pthread_t sniffer_thread){
@@ -275,13 +285,20 @@ int add_tdescriptor(int id, pthread_t sniffer_thread){
     return 0;
 }
 
-int add_sdescriptor(int id, struct sockaddr_in client){
-    if(id < 0){return 1;}
+int sub_connect(int id, int socket){
     pthread_mutex_lock(&lock);
-    client_d[id].client = client;
+    int size = sizeof(client_d[id].client);
+    if (sendto(socket, "ACK", BUFLEN, 0, &client_d[id].client, size) < 0)
+        return -2;
+    if (connect(socket , (struct sockaddr *)&client_d[id].client , size) < 0){
+        perror("connect failed. Error");
+        pthread_mutex_unlock(&lock);
+        return -1;
+    }
     pthread_mutex_unlock(&lock);
     return 0;
 }
+
 
 int shut(int id){
     pthread_mutex_lock(&lock);
