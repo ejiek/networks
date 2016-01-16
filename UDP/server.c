@@ -44,7 +44,8 @@ void list();
 int add_theme(char *);
 int readline(int , char *, int);
 int free_client_desc();
-sub_connect(int, int);
+int sub_connect(int, int);
+int add_sockdesc(int, int);
 
 void list_themes(char *);
 int list_news(int, char *);
@@ -112,6 +113,9 @@ int main(int argc , char *argv[])
         else printf(ERR"Wrong command"RST"\n");
     }
 
+
+    if (connect(socket_desc , (struct sockaddr *)&server , sizeof(server)) < 0)
+        puts("failed to connect main socket to itself");
     if(shutdown(socket_desc, SHUT_RDWR) == 0){
 	    puts(SCK"Main socket: down"RST);
 	    if(close(socket_desc) == 0){
@@ -124,7 +128,7 @@ int main(int argc , char *argv[])
     }
     else{
         puts(ERR"Main socket: failed to shut down"RST);
-    	return 1;
+        return 1;
     }
 
     if (pthread_join(accept_thread , (void**)&status_addr) != 0){
@@ -144,6 +148,7 @@ void *connection_handler(void *the_id){
 
     if ((sock=socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP))==-1)
     puts(ERR"Subsocket: failed to create"RST);
+    add_sockdesc(id, sock);
     if(sub_connect(id, sock) == -1)
     puts(ERR"Subsocket: failed to connect"RST);
     bzero(client_message, sizeof client_message);
@@ -191,16 +196,11 @@ void *connection_handler(void *the_id){
     else if(read_size == -1){
         puts(ERR"Subsocket: failed to recive"RST);
     }
-
+//free(sock);
 
 CH_END:
     pthread_mutex_lock(&lock);
-    for(int i=0; i < 100; i++){
-        if(client_d[i].socket == sock){
-            client_d[i].socket = 0;
-            break;
-        }
-    }
+    client_d[id].socket = 0;
     pthread_mutex_unlock(&lock);
     //Free the socket pointer
     //free(socket_desc);
@@ -213,9 +213,8 @@ void *accept_handler(void *socket_desc){
     char buf[BUFLEN];
     struct sockaddr_in new_client;
     c = sizeof(new_client);
-
 AH_RPT:
-    while( recvfrom(socket_desc, buf, BUFLEN, 0, &new_client, &c) ){
+    while( recvfrom(socket_desc, buf, BUFLEN, 0, &new_client, &c) > 0){
         puts(SCK"Main socket: connection accepted"RST);
 
         id = free_client_desc();
@@ -242,7 +241,7 @@ AH_RPT:
         }
     }
 AH_END:
-
+printf("recvfrom return value: %d\n", recvfrom(socket_desc, buf, BUFLEN, 0, &new_client, &c));
     for(int i=0; i < 100; i++){
         if(client_d[i].socket != 0){
 	        shut(i);
@@ -273,6 +272,13 @@ int free_client_desc(){
 int add_sockaddr(int id, struct sockaddr_in client){
     pthread_mutex_lock(&lock);
     client_d[id].client = client;
+    pthread_mutex_unlock(&lock);
+    return 0;
+}
+
+int add_sockdesc(int id, int desc){
+    pthread_mutex_lock(&lock);
+    client_d[id].socket = desc;
     pthread_mutex_unlock(&lock);
     return 0;
 }
@@ -431,5 +437,5 @@ int show_news(char *message, char *reply){
 }
 
 void help(char *reply){
-    strcpy(reply, "Available commands:\nLIST - prints a list of themes\nADDN [theme id] [text] - adds piece of news to the theme\nHELP - prints this help\nSHOW [id] - prints the piece of news\n");
+    strcpy(reply, "Available commands:\nLIST - prints a list of themes\nLIST [theme id] - prints a list of themes from the theme\nADDN [theme id] [text] - adds piece of news to the theme\nHELP - prints this help\nSHOW [id] - prints the piece of news\n");
 }
