@@ -5,6 +5,9 @@
 #include<arpa/inet.h>
 #include<unistd.h>
 #include<pthread.h>
+#include <sys/select.h>
+#include <sys/time.h>
+#include <sys/types.h>
 
 #define BUFLEN 512
 
@@ -142,9 +145,13 @@ int main(int argc , char *argv[])
 void *connection_handler(void *the_id){
     //Get the socket descriptor
     int id = *(int*)the_id;
-    int read_size, sock;
+    int read_size, sock, reason;
     char client_message[BUFLEN];
     char reply[BUFLEN];
+    struct timeval timeout;
+    fd_set readset;
+
+    timeout.tv_sec = 10;//*60;
 
     if ((sock=socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP))==-1)
     puts(ERR"Subsocket: failed to create"RST);
@@ -152,9 +159,12 @@ void *connection_handler(void *the_id){
     if(sub_connect(id, sock) == -1)
     puts(ERR"Subsocket: failed to connect"RST);
     bzero(client_message, sizeof client_message);
+    FD_ZERO(&readset);
+    FD_SET(sock, &readset);
     //Receive a message from client
-    while( (read_size = recv(sock , client_message , BUFLEN , 0)) > 0 ){
-    //while( (read_size = readline(client_sock , client_message , 2000)) > 0 ){
+    while( (reason = select(sock+1, &readset, NULL, NULL, &timeout)) > 0){
+    //while( (read_size = recv(sock , client_message , BUFLEN , 0)) > 0 ){
+      if(read_size = recv(sock , client_message , BUFLEN , 0)){
         if(strncmp(client_message,"LIST",4) == 0){
             if(client_message[5] == '\0') list_themes(reply);
             else list_news(strtoul(client_message+5, NULL,10) ,reply);
@@ -173,13 +183,17 @@ void *connection_handler(void *the_id){
 	       write(sock , reply , strlen(reply));
 	       bzero(client_message, sizeof client_message);
         bzero(reply, sizeof reply);
+      }
+      else break;
+    }
+    if(reason == 0){
+        printf(TRD"Subthread[%d]: client was inactive fo too long"RST"\n", id);
     }
 
-
     if(read_size == 0){
-        puts(TRD"Subthread: client disconnected"RST);
+        printf(TRD"Subthread[%d]: client disconnected"RST"\n", id);
 	    if(shutdown(sock, SHUT_RDWR) == 0){
-		    puts(SCK"Subsocket: down"RST);
+		    printf(SCK"Subsocket[id]: down"RST"\n", id);
 	    	if(close(sock) == 0){
 			    puts(SCK"Subsocket: closed"RST);
 		    }
