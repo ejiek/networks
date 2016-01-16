@@ -151,7 +151,7 @@ void *connection_handler(void *the_id){
     struct timeval timeout;
     fd_set readset;
 
-    timeout.tv_sec = 10;//*60;
+    timeout.tv_sec = 10*60;
 
     if ((sock=socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP))==-1)
     puts(ERR"Subsocket: failed to create"RST);
