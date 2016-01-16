@@ -4,6 +4,9 @@
 #include<sys/socket.h>    //socket
 #include<arpa/inet.h> //inet_addr
 #include<unistd.h>
+#include <sys/select.h>
+#include <sys/time.h>
+#include <sys/types.h>
 
 #define BUFLEN 512
 
@@ -17,6 +20,10 @@ int main(int argc , char *argv[])
     struct sockaddr_in server;
     int slen = sizeof(server);
     char message[BUFLEN] , server_reply[BUFLEN], server_addr[16], server_tmp_port[6];
+    struct timeval timeout;
+    fd_set readset;
+
+    timeout.tv_sec = 3;
 
     puts("Insert server addres (default 127.0.0.1)");
     fgets(server_addr, sizeof server_addr, stdin);
@@ -42,11 +49,14 @@ int main(int argc , char *argv[])
     }
     puts("Socket created");
 
+    FD_ZERO(&readset);
+    FD_SET(sock, &readset);
+
     server.sin_addr.s_addr = inet_addr( server_addr );
     server.sin_family = AF_INET;
     server.sin_port = htons( server_port );
 
-    if(sendto(sock, "HEL", BUFLEN, 0, &server, slen)==-1)
+    if(sendto(sock, "HEL\n\0", BUFLEN, 0, &server, slen)==-1)
         puts("failed to send Hello");
     if(recvfrom(sock, server_reply, BUFLEN, 0, &server, &slen)==-1)
         puts("failed to recieve a Hello answer");
@@ -80,6 +90,8 @@ int main(int argc , char *argv[])
             		return 1;
         	}
         	//Receive a reply from the server
+    if(select(sock+1, &readset, NULL, NULL, &timeout) < 1)
+        break;
 		if( recv(sock , server_reply , BUFLEN , 0) < 0)
         	{
         	    	puts("recv failed");
@@ -89,6 +101,9 @@ int main(int argc , char *argv[])
         	printf(SERV "%s" RESET, server_reply);
     	}
 	else break;
+    }
+    if( send(sock , "BEY\n\0" , BUFLEN , 0) < 0){
+        puts("Send \'BEY\' failed");
     }
     if(shutdown(sock, SHUT_RDWR) == 0){
     	if(close(sock) == 0){
