@@ -178,7 +178,8 @@ void *connection_handler(void *the_id){
         else if(strncmp(client_message, "SHOW", 4) == 0){
             show_news(client_message, reply);
         }
-        else if(strncmp(client_message,"HELP",2) == 0){ help(reply);}
+        else if(strncmp(client_message,"HELP",4) == 0){ help(reply);}
+        else if(strncmp(client_message,"BEY",3) == 0){ break;}
         else strcpy(reply, "WRONG COMMAN\n");
 	       write(sock , reply , strlen(reply));
 	       bzero(client_message, sizeof client_message);
@@ -193,22 +194,22 @@ void *connection_handler(void *the_id){
     if(read_size == 0){
         printf(TRD"Subthread[%d]: client disconnected"RST"\n", id);
 	    if(shutdown(sock, SHUT_RDWR) == 0){
-		    printf(SCK"Subsocket[id]: down"RST"\n", id);
+		    printf(SCK"Subsocket[%d]: down"RST"\n", id);
 	    	if(close(sock) == 0){
-			    puts(SCK"Subsocket: closed"RST);
+			    printf(SCK"Subsocket: closed"RST);
 		    }
 		    else{
-			    puts(ERR"Subsocket: failed to close"RST);
+			    printf(ERR"Subsocket[%d]: failed to close"RST"\n", id);
 			    goto CH_END;
 		    }
 	    }
 	    else{
-		    puts(ERR"Subsocket: failed to shut down"RST);
+		    printf(ERR"Subsocket[%d]: failed to shut down"RST"\n", id);
     		goto CH_END;
    	    }
     }
     else if(read_size == -1){
-        puts(ERR"Subsocket: failed to recive"RST);
+        printf(ERR"Subsocket[%d]: failed to recive"RST"\n", id);
     }
 //free(sock);
 
