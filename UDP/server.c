@@ -192,7 +192,6 @@ void *connection_handler(void *the_id){
     }
 
     if(read_size == 0){
-        printf(TRD"Subthread[%d]: client disconnected"RST"\n", id);
 	    if(shutdown(sock, SHUT_RDWR) == 0){
 		    printf(SCK"Subsocket[%d]: down"RST"\n", id);
 	    	if(close(sock) == 0){
@@ -219,6 +218,7 @@ CH_END:
     pthread_mutex_unlock(&lock);
     //Free the socket pointer
     //free(socket_desc);
+    printf(TRD"Subthread[%d]: client disconnected"RST"\n", id);
 }
 
 void *accept_handler(void *socket_desc){
@@ -324,6 +324,7 @@ int sub_connect(int id, int socket){
 int shut(int id){
     pthread_mutex_lock(&lock);
     if(client_d[id].socket != 0){
+        write(client_d[id].socket , "BEY\n\0" , BUFLEN);
         if(shutdown(client_d[id].socket, SHUT_RDWR) == 0){
         printf(SCK"Subsocket[%d]: down"RST"\n", id);
     	    if(close(client_d[id].socket) == 0){

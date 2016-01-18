@@ -97,8 +97,11 @@ int main(int argc , char *argv[])
         	    	puts("recv failed");
 	            	break;
         	}
-
-        	printf(SERV "%s" RESET, server_reply);
+        if(strncmp(server_reply,"BEY",3) == 0){
+          puts("Server disconnected");
+          break;
+        }
+        else{ printf(SERV "%s" RESET, server_reply); }
     	}
 	else break;
     }
