@@ -156,7 +156,10 @@ void *connection_handler(void *socket_desc)
     //while( (read_size = recv(client_sock , client_message , 2000 , 0)) > 0 )
     while( (read_size = readline(client_sock , client_message , 2000)) > 0 ){
         if(strncmp(client_message,"LIST",4) == 0){
-            if(client_message[5] == '\0') list_themes(reply);
+            if(client_message[5] == '\0'){
+                list_themes(reply);
+                sleep(40);
+             }   
             else list_news(strtoul(client_message+5, NULL,10) ,reply);
         }
         else if(strncmp(client_message, "ADDN", 4) == 0){ 
@@ -368,12 +371,17 @@ int readline(int fd, char *buf, int len){
 void list_themes(char *reply){
     int i=0;
     char tmp[50];
-    strcpy(reply, "Themes:\n");
+    strcpy(reply, "len    \n");
+    strcpy(reply+8, "Themes:\n");
     while(i < 100 && (themes[i].name[0] != '\0')){
         sprintf(tmp, "[%d] %s\n", i, themes[i].name);
         strcat(reply, tmp);
         i++;
     }
+    bzero(tmp, 50);
+    sprintf(tmp, "%d", i);
+    strncpy(reply+4, tmp, strlen(tmp));
+    puts(reply);
 }
 
 int list_news(int theme_id, char *reply){

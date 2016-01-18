@@ -9,9 +9,11 @@
 #define CLIENT "\x1B[36m"
 #define RESET  "\033[0m"
  
+int readline(int, char *, int);
+ 
 int main(int argc , char *argv[])
 {
-    int sock, server_port;
+    int sock, server_port, n_len;
     int err = 0; // 0 - no error
     struct sockaddr_in server;
     char message[1000] , server_reply[2000], server_addr[16], server_tmp_port[6];
@@ -63,13 +65,24 @@ int main(int argc , char *argv[])
         printf(RESET);
 	    if(strncmp(message,"quit",4) != 0){
 		//Send some data
-       		if( send(sock , message , strlen(message) , 0) < 0){
+       		if( send(sock , message , strlen(message) , 0) > 0){
                 puts("Send failed");
                 err = 1;
                 break;
         	}
         	//Receive a reply from the server
-		    if( recv(sock , server_reply , 2000 , 0) < 1){
+		    //if( recv(sock , server_reply , 2000 , 0) < 1){
+		    if( readline(sock , server_reply , 2000) > 0){
+		        puts(server_reply);
+		        if(strncmp(server_reply, "len ", 4) == 0){
+		            n_len = strtoul(message+4, NULL,10);
+		            for(int i = 0; i < n_len; i++){
+		                readline(sock , server_reply+strlen(server_reply) , 2000-strlen(server_reply));
+		                puts(server_reply);
+		            }
+		        }
+		    }
+		    else{
         	    puts("recv failed");
 	            break;
         	}
@@ -90,4 +103,21 @@ int main(int argc , char *argv[])
 	    err = 2;
 	}
     return err;
+}
+
+int readline(int fd, char *buf, int len){
+    char tmp = ' ';
+    char *p = &tmp;
+    int rc;
+    for(int i = 0; i < len; i++){
+        rc = recv( fd, p, 1, 0 );
+        if( rc == 0 ) return 0;
+        buf[i] = *p;
+        if( (int)*p == '\n'){
+            //buf[i] = '\0';
+            return i + 1;
+        }
+    }
+    buf[ len - 1 ] = '\0';
+    return -1;
 }
