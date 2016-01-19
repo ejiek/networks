@@ -190,29 +190,14 @@ void *connection_handler(void *the_id){
     }
     if(reason == 0){
         printf(TRD"Subthread[%d]: client was inactive fo too long"RST"\n", id);
+        shut(id);
     }
-
-    if(read_size == 0){
-	    if(shutdown(sock, SHUT_RDWR) == 0){
-		    printf(SCK"Subsocket[%d]: down"RST"\n", id);
-	    	if(close(sock) == 0){
-			    printf(SCK"Subsocket: closed"RST);
-		    }
-		    else{
-			    printf(ERR"Subsocket[%d]: failed to close"RST"\n", id);
-			    goto CH_END;
-		    }
-	    }
-	    else{
-		    printf(ERR"Subsocket[%d]: failed to shut down"RST"\n", id);
-    		goto CH_END;
-   	    }
+    else{
+        if(read_size <= 0){
+            shut(id);
+            printf(ERR"Subsocket[%d]: failed to recive"RST"\n", id);
+        }
     }
-    else if(read_size == -1){
-        printf(ERR"Subsocket[%d]: failed to recive"RST"\n", id);
-    }
-//free(sock);
-
 CH_END:
     pthread_mutex_lock(&lock);
     client_d[id].socket = 0;
