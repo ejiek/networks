@@ -145,13 +145,13 @@ int main(int argc , char *argv[])
 void *connection_handler(void *the_id){
     //Get the socket descriptor
     int id = *(int*)the_id;
-    int read_size, sock, reason;
+    int read_size, sock, reason, time_to_wait = 20;
     char client_message[BUFLEN];
     char reply[BUFLEN];
     struct timeval timeout;
     fd_set readset;
 
-    timeout.tv_sec = 10*60;
+    timeout.tv_sec = time_to_wait;
 
     if ((sock=socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP))==-1)
     puts(ERR"Subsocket: failed to create"RST);
@@ -186,6 +186,7 @@ void *connection_handler(void *the_id){
         bzero(reply, sizeof reply);
       }
       else break;
+      timeout.tv_sec = time_to_wait;
     }
     if(reason == 0){
         printf(TRD"Subthread[%d]: client was inactive fo too long"RST"\n", id);

@@ -90,6 +90,7 @@ int main(int argc , char *argv[])
             		return 1;
         	}
         	//Receive a reply from the server
+    timeout.tv_sec = 3;
     if(select(sock+1, &readset, NULL, NULL, &timeout) < 1)
         break;
 		if( recv(sock , server_reply , BUFLEN , 0) < 0)
