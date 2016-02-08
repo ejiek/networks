@@ -38,6 +38,10 @@ struct theme{
 struct theme themes[100];
 //const char *themes[] = {"Tech ", "Science", "Movies", "Cars"};
 
+struct mes_buf{
+    char msg[BUFLEN];
+};
+
 void *connection_handler(void *);
 void *accept_handler(void *);
 int add_sockaddr(int, struct sockaddr_in);
@@ -145,11 +149,12 @@ int main(int argc , char *argv[])
 void *connection_handler(void *the_id){
     //Get the socket descriptor
     int id = *(int*)the_id;
-    int read_size, sock, reason, time_to_wait = 20;
+    int read_size, sock, reason, time_to_wait = 20, mn = 0;
     char client_message[BUFLEN];
     char reply[BUFLEN];
     struct timeval timeout;
     fd_set readset;
+    struct mes_buf mesbuf[100];
 
     timeout.tv_sec = time_to_wait;
 
@@ -164,7 +169,7 @@ void *connection_handler(void *the_id){
     //Receive a message from client
     while( (reason = select(sock+1, &readset, NULL, NULL, &timeout)) > 0){
     //while( (read_size = recv(sock , client_message , BUFLEN , 0)) > 0 ){
-      if(read_size = recv(sock , client_message , BUFLEN , 0)){
+      if(read_size = mn_recv(sock ,*client_message)){
         if(strncmp(client_message,"LIST",4) == 0){
             if(client_message[5] == '\0') list_themes(reply);
             else list_news(strtoul(client_message+5, NULL,10) ,reply);
@@ -440,4 +445,29 @@ int show_news(char *message, char *reply){
 
 void help(char *reply){
     strcpy(reply, "Available commands:\nLIST - prints a list of themes\nLIST [theme id] - prints a list of themes from the theme\nADDN [theme id] [text] - adds piece of news to the theme\nHELP - prints this help\nSHOW [id] - prints the piece of news\n");
+}
+
+int mn_recv(int mn, char *client_message, struct mes_buf *mesbuf[100]){
+    char msg_with_n[BUFLEN];
+    read_size = recv(sock , msg_with_n, BUFLEN , 0);
+    if(get_mn == mn +1){
+      mn++;
+      strcpy(client_message, msg_with_n+4);
+    }
+    else{
+        if(get_mn > mn){
+          add_to_buf(msg_with_n, mesbuf[100]);
+        }
+    }
+
+}
+
+int get_mn(char msg[BUFLEN]){
+    return strtoul(msg, NULL,10);
+}
+
+int add_to_buf(struct mes_buf *mesbuf[100]){
+  for(int i; i < 100; i++){
+    if(strncmp(mesbuf[i].msg, "000", 3)
+  }
 }

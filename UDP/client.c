@@ -14,6 +14,12 @@
 #define CLIENT "\x1B[36m"
 #define RESET  "\033[0m"
 
+int mn = 0;
+
+int nsend(int , char*);
+int nprint(int , char *);
+int inc_mn();
+
 int main(int argc , char *argv[])
 {
     int sock, server_port;
@@ -120,4 +126,31 @@ int main(int argc , char *argv[])
     }
     else puts("Failed to shutdown soket");
     return 0;
+}
+
+int nsend(int sock , char *message){
+    char n[BUFLEN];
+    nprint(inc_mn, n);
+    n[3] = ' ';
+    strncpy(n+4, message, BUFLEN);
+    if( send(sock , message , strlen(message) , 0) < 0){
+        puts("Send failed");
+        return 1;
+    }
+    return 0;
+}
+
+int nprint(int n, char *message){
+  if (n < 0) return -1;
+  if(n < 10) sprintf(message+2, "%d", n);
+  else if(n < 100) sprintf(message+1, "%d", n);
+  else if(n < 1000) sprintf(message, "%d", n);
+  else return -2;
+  return 0;
+}
+
+int inc_mn(){
+  if(mn == 999) mn = 0;
+  else if(mn<1000) mn++;
+  return mn;
 }
