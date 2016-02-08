@@ -131,13 +131,12 @@ int nsend(int sock , char *message){
     nprint(inc_mn(), n);
     printf("mn == %d\n", mn);
     n[3] = ' ';
-    strncpy(n+4, message, BUFLEN);
+    strncpy(n+4, message, BUFLEN-4);
     strncpy(message, n, BUFLEN);
     if( send(sock , message, BUFLEN , 0) < 0){
         puts("Send failed");
         return 1;
     }
-    printf("%c, %c, %c, %c\n", n[0],n[1],n[2],n[3]);
     return 0;
 }
 

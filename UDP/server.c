@@ -60,7 +60,7 @@ int add_po_news(char *);
 int show_news(char * , char *);
 void help(char *);
 
-int mn_recv(int , char *, int, struct mes_buf *[100]);
+int mn_recv(int , char *, int *, struct mes_buf *[100]);
 int get_mn(char msg[BUFLEN]);
 int add_to_buf(char *, struct mes_buf *mesbuf[100]);
 
@@ -173,7 +173,7 @@ void *connection_handler(void *the_id){
     //Receive a message from client
     while( (reason = select(sock+1, &readset, NULL, NULL, &timeout)) > 0){
     //while( (read_size = recv(sock , client_message , BUFLEN , 0)) > 0 ){
-      if(read_size = mn_recv(sock ,client_message, mn, &mesbuf[100])){
+      if(read_size = mn_recv(sock ,client_message, &mn, &mesbuf[100])){
         if(strncmp(client_message,"LIST",4) == 0){
             if(client_message[5] == '\0') list_themes(reply);
             else list_news(strtoul(client_message+5, NULL,10) ,reply);
@@ -451,15 +451,16 @@ void help(char *reply){
     strcpy(reply, "Available commands:\nLIST - prints a list of themes\nLIST [theme id] - prints a list of themes from the theme\nADDN [theme id] [text] - adds piece of news to the theme\nHELP - prints this help\nSHOW [id] - prints the piece of news\n");
 }
 
-int mn_recv(int sock, char *client_message, int mn, struct mes_buf *mesbuf[100]){
+int mn_recv(int sock, char *client_message, int *mn, struct mes_buf *mesbuf[100]){
     char msg_with_n[BUFLEN], tmp[BUFLEN];
     int read_size, new_mn;
     if( (read_size = recv(sock , msg_with_n, BUFLEN , 0)) >= 0){
         strcpy(tmp, msg_with_n+4);
         new_mn = get_mn(msg_with_n);
+        printf("mn: %d\n", *mn);
         printf("recieved number: %d\n", new_mn);
-        if( new_mn == mn +1){
-            mn++;
+        if( new_mn == *mn + 1){
+            *mn = *mn + 1;
             strcpy(client_message, tmp);
             printf("recieved message: %s\n", client_message);
         }
