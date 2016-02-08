@@ -63,6 +63,8 @@ void help(char *);
 int mn_recv(int , char *, int *, struct mes_buf *[100]);
 int get_mn(char msg[BUFLEN]);
 int add_to_buf(char *, struct mes_buf *mesbuf[100]);
+int nprint(int, char *);
+int get_from_buf(int , struct mes_buf *mesbuf[100], char *);
 
 int main(int argc , char *argv[])
 {
@@ -455,18 +457,23 @@ int mn_recv(int sock, char *client_message, int *mn, struct mes_buf *mesbuf[100]
     char msg_with_n[BUFLEN], tmp[BUFLEN];
     int read_size, new_mn;
     if( (read_size = recv(sock , msg_with_n, BUFLEN , 0)) >= 0){
-        strcpy(tmp, msg_with_n+4);
         new_mn = get_mn(msg_with_n);
-        printf("mn: %d\n", *mn);
         printf("recieved number: %d\n", new_mn);
-        if( new_mn == *mn + 1){
+        if( get_from_buf(*mn+1, mesbuf[100], tmp) == 0){
             *mn = *mn + 1;
-            strcpy(client_message, tmp);
-            printf("recieved message: %s\n", client_message);
         }
         else{
-            if(new_mn > mn){
-                add_to_buf(tmp, mesbuf[100]);
+            strcpy(tmp, msg_with_n+4);
+            printf("mn: %d\n", *mn);
+            if( new_mn == *mn + 1){
+                *mn = *mn + 1;
+                strcpy(client_message, tmp);
+                printf("recieved message: %s\n", client_message);
+            }
+            else{
+                if(new_mn > *mn){
+                    add_to_buf(tmp, mesbuf[100]);
+                }
             }
         }
     }
@@ -485,4 +492,26 @@ int add_to_buf(char *msg, struct mes_buf *mesbuf[100]){
         break;
     }
   }
+}
+
+int get_from_buf(int nm, struct mes_buf *mesbuf[100], char *tmp){
+    char n[3];
+    nprint(nm, n);
+    for(int i; i < 100; i++){
+        if(strncmp(mesbuf[i]->msg, n, 3) == 0){
+            strcpy(tmp, mesbuf[i]->msg+4);
+            bzero(mesbuf[i]->msg, BUFLEN);
+            return 0;
+        }
+    }
+    return 1;
+}
+
+int nprint(int n, char *message){
+  if (n < 0) return -1;
+  if(n < 10) sprintf(message+2, "%d", n);
+  else if(n < 100) sprintf(message+1, "%d", n);
+  else if(n < 1000) sprintf(message, "%d", n);
+  else return -2;
+  return 0;
 }
