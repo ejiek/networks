@@ -90,11 +90,8 @@ int main(int argc , char *argv[])
         printf(RESET);
 	if(strncmp(message,"quit",4) != 0){
 		//Send some data
-       		if( send(sock , message , strlen(message) , 0) < 0)
-        	{
-            		puts("Send failed");
-            		return 1;
-        	}
+       	    nsend(sock , message);
+            printf("sended message: %s\n", message);
         	//Receive a reply from the server
     timeout.tv_sec = 3;
     if(select(sock+1, &readset, NULL, NULL, &timeout) < 1)
@@ -130,13 +127,17 @@ int main(int argc , char *argv[])
 
 int nsend(int sock , char *message){
     char n[BUFLEN];
-    nprint(inc_mn, n);
+    strncpy(n, "000", 3);
+    nprint(inc_mn(), n);
+    printf("mn == %d\n", mn);
     n[3] = ' ';
     strncpy(n+4, message, BUFLEN);
-    if( send(sock , message , strlen(message) , 0) < 0){
+    strncpy(message, n, BUFLEN);
+    if( send(sock , message, BUFLEN , 0) < 0){
         puts("Send failed");
         return 1;
     }
+    printf("%c, %c, %c, %c\n", n[0],n[1],n[2],n[3]);
     return 0;
 }
 
@@ -150,7 +151,7 @@ int nprint(int n, char *message){
 }
 
 int inc_mn(){
-  if(mn == 999) mn = 0;
-  else if(mn<1000) mn++;
-  return mn;
+  if(mn<1000) mn++;
+  else mn = 0;
+return mn;
 }
