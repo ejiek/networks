@@ -459,7 +459,7 @@ int mn_recv(int sock, char *client_message, int *mn, struct mes_buf mesbuf[100])
     if( (read_size = recv(sock , msg_with_n, BUFLEN , 0)) >= 0){
         new_mn = get_mn(msg_with_n);
         printf("recieved number: %d\n", new_mn);
-        if( get_from_buf(*mn+1, &mesbuf[100], tmp) == 0){
+        if( read_size = get_from_buf(*mn+1, &mesbuf[100], tmp) > 0){
             *mn = *mn + 1;
             puts("da");
         }
@@ -479,7 +479,7 @@ int mn_recv(int sock, char *client_message, int *mn, struct mes_buf mesbuf[100])
         }
     }
     
-    if( get_from_buf(*mn+1, &mesbuf[100], tmp) == 0){
+    if( read_size = get_from_buf(*mn+1, &mesbuf[100], tmp) > 0){
         *mn = *mn + 1;
     }
 
@@ -508,10 +508,10 @@ int get_from_buf(int nm, struct mes_buf mesbuf[100], char *tmp){
         if(strncmp(mesbuf[i].msg, n, 3) == 0){
             strcpy(tmp, mesbuf[i].msg+4);
             bzero(mesbuf[i].msg, BUFLEN);
-            return 0;
+            return strlen(tmp);
         }
     }
-    return 1;
+    return 0;
 }
 
 int nprint(int n, char *message){
