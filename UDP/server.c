@@ -65,6 +65,7 @@ int get_mn(char msg[BUFLEN]);
 int add_to_buf(char *, struct mes_buf mesbuf[100]);
 int nprint(int, char *);
 int get_from_buf(int , struct mes_buf mesbuf[100], char *);
+int return_bigger(int, int);
 
 int main(int argc , char *argv[])
 {
@@ -175,7 +176,7 @@ void *connection_handler(void *the_id){
     //Receive a message from client
     while( (reason = select(sock+1, &readset, NULL, NULL, &timeout)) > 0){
     //while( (read_size = recv(sock , client_message , BUFLEN , 0)) > 0 ){
-      if(read_size = mn_recv(sock ,client_message, &mn, &mesbuf[100])){
+      if( (read_size = mn_recv(sock ,client_message, &mn, &mesbuf[100])) > 0){
         if(strncmp(client_message,"LIST",4) == 0){
             if(client_message[5] == '\0') list_themes(reply);
             else list_news(strtoul(client_message+5, NULL,10) ,reply);
@@ -455,13 +456,12 @@ void help(char *reply){
 
 int mn_recv(int sock, char *client_message, int *mn, struct mes_buf mesbuf[100]){
     char msg_with_n[BUFLEN], tmp[BUFLEN];
-    int read_size, new_mn;
-    if( (read_size = recv(sock , msg_with_n, BUFLEN , 0)) >= 0){
+    int read_size, new_mn, buf_read_size;
+    if( (read_size = recv(sock , msg_with_n, BUFLEN , 0)) > 0){
         new_mn = get_mn(msg_with_n);
         printf("recieved number: %d\n", new_mn);
-        if( read_size = get_from_buf(*mn+1, &mesbuf[100], tmp) > 0){
+        if( (buf_read_size = get_from_buf(*mn+1, &mesbuf[100], tmp)) > 0){
             *mn = *mn + 1;
-            puts("da");
         }
         else{
             strcpy(tmp, msg_with_n+4);
@@ -479,7 +479,7 @@ int mn_recv(int sock, char *client_message, int *mn, struct mes_buf mesbuf[100])
         }
     }
     
-    if( read_size = get_from_buf(*mn+1, &mesbuf[100], tmp) > 0){
+    if( (buf_read_size = get_from_buf(*mn+1, &mesbuf[100], tmp)) > 0){
         *mn = *mn + 1;
     }
 
@@ -503,7 +503,6 @@ int add_to_buf(char *msg, struct mes_buf mesbuf[100]){
 int get_from_buf(int nm, struct mes_buf mesbuf[100], char *tmp){
     char n[3];
     nprint(nm, n);
-    printf("number: %d buffer: %s\n", nm, n);
     for(int i; i < 100; i++){
         if(strncmp(mesbuf[i].msg, n, 3) == 0){
             strcpy(tmp, mesbuf[i].msg+4);
@@ -522,4 +521,9 @@ int nprint(int n, char *message){
   else if(n < 1000) sprintf(message, "%d", n);
   else return -2;
   return 0;
+}
+
+int return_bigger(int recv_size, int buf_size){
+    if(recv_size > buf_size) return recv_size;
+    else return buf_size;
 }
