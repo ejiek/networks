@@ -478,6 +478,11 @@ int mn_recv(int sock, char *client_message, int *mn, struct mes_buf mesbuf[100])
             }
         }
     }
+    
+    if( get_from_buf(*mn+1, &mesbuf[100], tmp) == 0){
+        *mn = *mn + 1;
+    }
+
     return read_size;
 
 }
