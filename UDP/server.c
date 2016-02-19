@@ -5,11 +5,7 @@
 #include<arpa/inet.h>
 #include<unistd.h>
 #include<pthread.h>
-#include <sys/select.h>
-#include <sys/time.h>
-#include <sys/types.h>
-
-#define BUFLEN 512
+#include "enet.h"
 
 #define SCK "\x1B[34m"
 #define TRD "\x1B[33m"
@@ -38,10 +34,6 @@ struct theme{
 struct theme themes[100];
 //const char *themes[] = {"Tech ", "Science", "Movies", "Cars"};
 
-struct mes_buf{
-    char msg[BUFLEN];
-};
-
 void *connection_handler(void *);
 void *accept_handler(void *);
 int add_sockaddr(int, struct sockaddr_in);
@@ -59,13 +51,6 @@ int list_news(int, char *);
 int add_po_news(char *);
 int show_news(char * , char *);
 void help(char *);
-
-int mn_recv(int , char *, int *, struct mes_buf [100], struct timeval *, fd_set *);
-int get_mn(char msg[BUFLEN]);
-int add_to_buf(char *, struct mes_buf mesbuf[100]);
-int nprint(int, char *);
-int get_from_buf(int , struct mes_buf mesbuf[100], char *);
-int return_bigger(int, int);
 
 int main(int argc , char *argv[])
 {
@@ -451,85 +436,3 @@ void help(char *reply){
     strcpy(reply, "Available commands:\nLIST - prints a list of themes\nLIST [theme id] - prints a list of themes from the theme\nADDN [theme id] [text] - adds piece of news to the theme\nHELP - prints this help\nSHOW [id] - prints the piece of news\n");
 }
 
-int mn_recv(int sock, char *client_message, int *mn, struct mes_buf mesbuf[100], struct timeval *timeout, fd_set *readset){
-    char msg_with_n[BUFLEN], tmp[BUFLEN];
-    int read_size, new_mn, buf_read_size, reason;
-
-    while(reason = select(sock+1, readset, NULL, NULL, timeout) > 0){
-
-    if( (read_size = recv(sock , msg_with_n, BUFLEN , 0)) > 0){
-        new_mn = get_mn(msg_with_n);
-        printf("recieved number: %d\n", new_mn);
-        if( (buf_read_size = get_from_buf(*mn+1, &mesbuf[100], tmp)) > 0){
-            *mn = *mn + 1;
-            strcpy(client_message, tmp);
-            return buf_read_size;
-        }
-        else{
-            strcpy(tmp, msg_with_n+4);
-            printf("mn: %d\n", *mn);
-            if( new_mn == *mn + 1){
-                *mn = *mn + 1;
-                strcpy(client_message, tmp);
-                printf("recieved message: %s\n", client_message);
-                return strlen(client_message);
-            }
-            else{
-                if(new_mn > *mn){
-                    add_to_buf(tmp, &mesbuf[100]);
-                }
-            }
-        }
-    }
-
-    }
-    
-    if( (buf_read_size = get_from_buf(*mn+1, &mesbuf[100], tmp)) > 0){
-        *mn = *mn + 1;
-        return buf_read_size;
-    }
-    
-    return reason;
-
-}
-
-int get_mn(char msg[BUFLEN]){
-    return strtoul(msg, NULL,10);
-}
-
-int add_to_buf(char *msg, struct mes_buf mesbuf[100]){
-  for(int i; i < 100; i++){
-    if(mesbuf[i].msg[0] == '\0'){
-        strncpy(mesbuf[i].msg, msg, BUFLEN);
-        break;
-    }
-  }
-}
-
-int get_from_buf(int nm, struct mes_buf mesbuf[100], char *tmp){
-    char n[3];
-    nprint(nm, n);
-    for(int i; i < 100; i++){
-        if(strncmp(mesbuf[i].msg, n, 3) == 0){
-            strcpy(tmp, mesbuf[i].msg+4);
-            bzero(mesbuf[i].msg, BUFLEN);
-            return strlen(tmp);
-        }
-    }
-    return 0;
-}
-
-int nprint(int n, char *message){
-  if (n < 0) return -1;
-  strncpy(message, "000 ", 4);
-  if(n < 10) sprintf(message+2, "%d", n);
-  else if(n < 100) sprintf(message+1, "%d", n);
-  else if(n < 1000) sprintf(message, "%d", n);
-  else return -2;
-  return 0;
-}
-
-int return_bigger(int recv_size, int buf_size){
-    if(recv_size > buf_size) return recv_size;
-    else return buf_size;
-}
