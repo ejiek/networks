@@ -53,7 +53,7 @@ int add_to_buf(int mn, char *msg, struct mes_buf mesbuf[100]){
     }
   }
   for(int i; i < 100; i++){
-    if(mesbuf[i].numer == 0){
+    if(mesbuf[i].number == 0){
         mesbuf[i].number = mn;
         strncpy(mesbuf[i].msg, msg, BUFLEN);
         return 0;
