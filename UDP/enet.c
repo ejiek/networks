@@ -64,9 +64,8 @@ int add_to_buf(int mn, char *msg, struct mes_buf mesbuf[100]){
 
 int get_from_buf(int nm, struct mes_buf mesbuf[100], char *tmp){
     char n[3];
-    nprint(nm, n);
     for(int i = 0; i < 100; i++){
-        if(strncmp(mesbuf[i].msg, n, 3) == 0){
+        if(mesbuf[i].number == 0){
             strcpy(tmp, mesbuf[i].msg+4);
             bzero(mesbuf[i].msg, BUFLEN);
             return strlen(tmp);
