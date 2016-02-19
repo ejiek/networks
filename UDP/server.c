@@ -41,7 +41,6 @@ int add_tdescriptor(int , pthread_t);
 int shut(int id);
 void list();
 int add_theme(char *);
-int readline(int , char *, int);
 int free_client_desc();
 int sub_connect(int, int);
 int add_sockdesc(int, int);
@@ -346,23 +345,6 @@ int add_theme(char *message){
     return -1;
 AT_END:
     return 0;
-}
-
-int readline(int fd, char *buf, int len){
-    char tmp = ' ';
-    char *p = &tmp;
-    int rc;
-    for(int i = 0; i < len; i++){
-        rc = recv( fd, p, 1, 0 );
-        if( rc == 0 ) return 0;
-        buf[i] = *p;
-        if( (int)*p == '\n'){
-            //buf[i] = '\0';
-            return i + 1;
-        }
-    }
-    buf[ len - 1 ] = '\0';
-    return -1;
 }
 
 void list_themes(char *reply){
