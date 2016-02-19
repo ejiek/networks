@@ -14,15 +14,13 @@
 #define CLIENT "\x1B[36m"
 #define RESET  "\033[0m"
 
-int mn = 0;
-
-int nsend(int , char*);
+int nsend(int *, int , char*);
 int nprint(int , char *);
-int inc_mn();
+int inc_mn(int *);
 
 int main(int argc , char *argv[])
 {
-    int sock, server_port;
+    int sock, server_port, lmn = 0;
     struct sockaddr_in server;
     int slen = sizeof(server);
     char message[BUFLEN] , server_reply[BUFLEN], server_addr[16], server_tmp_port[6];
@@ -90,7 +88,7 @@ int main(int argc , char *argv[])
         printf(RESET);
 	if(strncmp(message,"quit",4) != 0){
 		//Send some data
-       	    nsend(sock , message);
+       	    nsend(&lmn, sock , message);
             printf("sended message: %s\n", message);
         	//Receive a reply from the server
     timeout.tv_sec = 3;
@@ -125,11 +123,11 @@ int main(int argc , char *argv[])
     return 0;
 }
 
-int nsend(int sock , char *message){
+int nsend(int *mn, int sock , char *message){
     char n[BUFLEN];
     strncpy(n, "000", 3);
-    nprint(inc_mn(), n);
-    printf("mn == %d\n", mn);
+    nprint(inc_mn(mn), n);
+    printf("mn == %d\n", *mn);
     n[3] = ' ';
     strncpy(n+4, message, BUFLEN-4);
     strncpy(message, n, BUFLEN);
@@ -149,8 +147,8 @@ int nprint(int n, char *message){
   return 0;
 }
 
-int inc_mn(){
-  if(mn<1000) mn++;
-  else mn = 0;
-return mn;
+int inc_mn(int *mn){
+  if(*mn<1000) *mn = *mn + 1;
+  else *mn = 0;
+return *mn;
 }
