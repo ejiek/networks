@@ -140,7 +140,7 @@ int main(int argc , char *argv[])
 void *connection_handler(void *the_id){
     //Get the socket descriptor
     int id = *(int*)the_id;
-    int read_size, sock, reason, time_to_wait = 20, mn = 0;
+    int read_size, sock, reason, time_to_wait = 20, mn = 0, rmn = 0;
     char client_message[BUFLEN];
     char reply[BUFLEN];
     struct timeval timeout;
@@ -176,7 +176,7 @@ void *connection_handler(void *the_id){
         else if(strncmp(client_message,"HELP",4) == 0){ help(reply);}
         else if(strncmp(client_message,"BEY",3) == 0){ break;}
         else strcpy(reply, "WRONG COMMAN\n");
-	       write(sock , reply , strlen(reply));
+	       nsend(&rmn, sock , reply);
 	       bzero(client_message, sizeof client_message);
         bzero(reply, sizeof reply);
         timeout.tv_sec = time_to_wait;
