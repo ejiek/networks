@@ -9,7 +9,7 @@ int mn_recv(int sock, char *client_message, int *mn, struct mes_buf mesbuf[100],
     if( (read_size = recv(sock , msg_with_n, BUFLEN , 0)) > 0){
         new_mn = get_mn(msg_with_n);
         printf("recieved number: %d\n", new_mn);
-        if( (buf_read_size = get_from_buf(*mn+1, &mesbuf[100], tmp)) > 0){
+        if( (buf_read_size = get_from_buf(*mn+1, mesbuf, tmp)) > 0){
             *mn = *mn + 1;
             strcpy(client_message, tmp);
             return buf_read_size;
@@ -33,7 +33,7 @@ int mn_recv(int sock, char *client_message, int *mn, struct mes_buf mesbuf[100],
 
     }
     
-    if( (buf_read_size = get_from_buf(*mn+1, &mesbuf[100], tmp)) > 0){
+    if( (buf_read_size = get_from_buf(*mn+1, mesbuf, tmp)) > 0){
         *mn = *mn + 1;
         return buf_read_size;
     }

@@ -17,11 +17,11 @@ struct mes_buf{
     char msg[BUFLEN];
 };
 
-int mn_recv(int , char *, int *, struct mes_buf [100], struct timeval *, fd_set *);
+int mn_recv(int , char *, int *, struct mes_buf [], struct timeval *, fd_set *);
 int get_mn(char msg[BUFLEN]);
-int add_to_buf(int, char *, struct mes_buf mesbuf[100]);
+int add_to_buf(int, char *, struct mes_buf mesbuf[]);
 int nprint(int, char *);
-int get_from_buf(int , struct mes_buf mesbuf[100], char *);
+int get_from_buf(int , struct mes_buf mesbuf[], char *);
 int return_bigger(int, int);
 
 int nsend(int *, int , char*);
