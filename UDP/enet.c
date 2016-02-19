@@ -47,12 +47,12 @@ int get_mn(char msg[BUFLEN]){
 }
 
 int add_to_buf(int mn, char *msg, struct mes_buf mesbuf[100]){
-  for(int i; i < 100; i++){
+  for(int i = 0; i < 100; i++){
     if(mesbuf[i].number == mn){
         return -1;
     }
   }
-  for(int i; i < 100; i++){
+  for(int i = 0; i < 100; i++){
     if(mesbuf[i].number == 0){
         mesbuf[i].number = mn;
         strncpy(mesbuf[i].msg, msg, BUFLEN);
@@ -65,7 +65,7 @@ int add_to_buf(int mn, char *msg, struct mes_buf mesbuf[100]){
 int get_from_buf(int nm, struct mes_buf mesbuf[100], char *tmp){
     char n[3];
     nprint(nm, n);
-    for(int i; i < 100; i++){
+    for(int i = 0; i < 100; i++){
         if(strncmp(mesbuf[i].msg, n, 3) == 0){
             strcpy(tmp, mesbuf[i].msg+4);
             bzero(mesbuf[i].msg, BUFLEN);
