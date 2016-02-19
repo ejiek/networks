@@ -60,7 +60,7 @@ int add_po_news(char *);
 int show_news(char * , char *);
 void help(char *);
 
-int mn_recv(int , char *, int *, struct mes_buf [100]);
+int mn_recv(int , char *, int *, struct mes_buf [100], struct timeval *, fd_set *);
 int get_mn(char msg[BUFLEN]);
 int add_to_buf(char *, struct mes_buf mesbuf[100]);
 int nprint(int, char *);
@@ -174,9 +174,8 @@ void *connection_handler(void *the_id){
     FD_ZERO(&readset);
     FD_SET(sock, &readset);
     //Receive a message from client
-    while( (reason = select(sock+1, &readset, NULL, NULL, &timeout)) > 0){
-    //while( (read_size = recv(sock , client_message , BUFLEN , 0)) > 0 ){
-      if( (read_size = mn_recv(sock ,client_message, &mn, &mesbuf[100])) > 0){
+    while( (reason = mn_recv(sock ,client_message, &mn, &mesbuf[100], &timeout, &readset) > 0) ){
+        printf("reason: %d\n", reason);
         if(strncmp(client_message,"LIST",4) == 0){
             if(client_message[5] == '\0') list_themes(reply);
             else list_news(strtoul(client_message+5, NULL,10) ,reply);
@@ -196,9 +195,7 @@ void *connection_handler(void *the_id){
 	       write(sock , reply , strlen(reply));
 	       bzero(client_message, sizeof client_message);
         bzero(reply, sizeof reply);
-      }
-      else break;
-      timeout.tv_sec = time_to_wait;
+        timeout.tv_sec = time_to_wait;
     }
     if(reason == 0){
         printf(TRD"Subthread[%d]: client was inactive fo too long"RST"\n", id);
@@ -454,14 +451,19 @@ void help(char *reply){
     strcpy(reply, "Available commands:\nLIST - prints a list of themes\nLIST [theme id] - prints a list of themes from the theme\nADDN [theme id] [text] - adds piece of news to the theme\nHELP - prints this help\nSHOW [id] - prints the piece of news\n");
 }
 
-int mn_recv(int sock, char *client_message, int *mn, struct mes_buf mesbuf[100]){
+int mn_recv(int sock, char *client_message, int *mn, struct mes_buf mesbuf[100], struct timeval *timeout, fd_set *readset){
     char msg_with_n[BUFLEN], tmp[BUFLEN];
-    int read_size, new_mn, buf_read_size;
+    int read_size, new_mn, buf_read_size, reason;
+
+    while(reason = select(sock+1, readset, NULL, NULL, timeout) > 0){
+
     if( (read_size = recv(sock , msg_with_n, BUFLEN , 0)) > 0){
         new_mn = get_mn(msg_with_n);
         printf("recieved number: %d\n", new_mn);
         if( (buf_read_size = get_from_buf(*mn+1, &mesbuf[100], tmp)) > 0){
             *mn = *mn + 1;
+            strcpy(client_message, tmp);
+            return buf_read_size;
         }
         else{
             strcpy(tmp, msg_with_n+4);
@@ -470,6 +472,7 @@ int mn_recv(int sock, char *client_message, int *mn, struct mes_buf mesbuf[100])
                 *mn = *mn + 1;
                 strcpy(client_message, tmp);
                 printf("recieved message: %s\n", client_message);
+                return strlen(client_message);
             }
             else{
                 if(new_mn > *mn){
@@ -478,12 +481,15 @@ int mn_recv(int sock, char *client_message, int *mn, struct mes_buf mesbuf[100])
             }
         }
     }
+
+    }
     
     if( (buf_read_size = get_from_buf(*mn+1, &mesbuf[100], tmp)) > 0){
         *mn = *mn + 1;
+        return buf_read_size;
     }
-
-    return read_size;
+    
+    return reason;
 
 }
 
