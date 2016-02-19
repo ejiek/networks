@@ -20,4 +20,8 @@ int nprint(int, char *);
 int get_from_buf(int , struct mes_buf mesbuf[100], char *);
 int return_bigger(int, int);
 
+int nsend(int *, int , char*);
+int nprint(int , char *);
+int inc_mn(int *);
+
 #endif // ENET_H_

@@ -75,6 +75,8 @@ int get_from_buf(int nm, struct mes_buf mesbuf[100], char *tmp){
     return 0;
 }
 
+// Receiving part
+
 int nprint(int n, char *message){
   if (n < 0) return -1;
   strncpy(message, "000 ", 4);
@@ -88,4 +90,25 @@ int nprint(int n, char *message){
 int return_bigger(int recv_size, int buf_size){
     if(recv_size > buf_size) return recv_size;
     else return buf_size;
+}
+
+int nsend(int *mn, int sock , char *message){
+    char n[BUFLEN];
+    strncpy(n, "000", 3);
+    nprint(inc_mn(mn), n);
+    printf("mn == %d\n", *mn);
+    n[3] = ' ';
+    strncpy(n+4, message, BUFLEN-4);
+    strncpy(message, n, BUFLEN);
+    if( send(sock , message, BUFLEN , 0) < 0){
+        puts("Send failed");
+        return 1;
+    }
+    return 0;
+}
+
+int inc_mn(int *mn){
+  if(*mn<1000) *mn = *mn + 1;
+  else *mn = 0;
+return *mn;
 }

@@ -4,19 +4,11 @@
 #include<sys/socket.h>    //socket
 #include<arpa/inet.h> //inet_addr
 #include<unistd.h>
-#include <sys/select.h>
-#include <sys/time.h>
-#include <sys/types.h>
-
-#define BUFLEN 512
+#include "enet.h"
 
 #define SERV   "\x1B[35m"
 #define CLIENT "\x1B[36m"
 #define RESET  "\033[0m"
-
-int nsend(int *, int , char*);
-int nprint(int , char *);
-int inc_mn(int *);
 
 int main(int argc , char *argv[])
 {
@@ -123,32 +115,4 @@ int main(int argc , char *argv[])
     return 0;
 }
 
-int nsend(int *mn, int sock , char *message){
-    char n[BUFLEN];
-    strncpy(n, "000", 3);
-    nprint(inc_mn(mn), n);
-    printf("mn == %d\n", *mn);
-    n[3] = ' ';
-    strncpy(n+4, message, BUFLEN-4);
-    strncpy(message, n, BUFLEN);
-    if( send(sock , message, BUFLEN , 0) < 0){
-        puts("Send failed");
-        return 1;
-    }
-    return 0;
-}
 
-int nprint(int n, char *message){
-  if (n < 0) return -1;
-  if(n < 10) sprintf(message+2, "%d", n);
-  else if(n < 100) sprintf(message+1, "%d", n);
-  else if(n < 1000) sprintf(message, "%d", n);
-  else return -2;
-  return 0;
-}
-
-int inc_mn(int *mn){
-  if(*mn<1000) *mn = *mn + 1;
-  else *mn = 0;
-return *mn;
-}
