@@ -84,11 +84,12 @@ int main(int argc , char *argv[])
        	    nsend(&lmn, sock , message);
         	//Receive a reply from the server
     timeout.tv_sec = time_to_wait;
-    if(reason = mn_recv(sock ,server_reply, &rmn, &mesbuf, &timeout, &readset) > 0){
+    if( (reason = mn_recv(sock ,server_reply, &rmn, &mesbuf, &timeout, &readset)) > 0){
         printf(SERV "%s" RESET, server_reply);
     }
 	else break;
     }
+	else break;
     }
     if( send(sock , "BEY\n\0" , BUFLEN , 0) < 0){
         puts("Send \'BEY\' failed");
