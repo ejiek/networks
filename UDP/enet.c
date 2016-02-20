@@ -8,7 +8,6 @@ int mn_recv(int sock, char *client_message, int *mn, struct mes_buf mesbuf[100],
 
     if( (read_size = recv(sock , msg_with_n, BUFLEN , 0)) > 0){
         new_mn = get_mn(msg_with_n);
-        printf("recieved number: %d\n", new_mn);
         if( (buf_read_size = get_from_buf(*mn+1, mesbuf, tmp)) > 0){
             *mn = *mn + 1;
             strcpy(client_message, tmp);
@@ -16,17 +15,16 @@ int mn_recv(int sock, char *client_message, int *mn, struct mes_buf mesbuf[100],
         }
         else{
             strcpy(tmp, msg_with_n+4);
-            printf("mn: %d\n", *mn);
             if( new_mn == *mn + 1){
                 *mn = *mn + 1;
                 strcpy(client_message, tmp);
-                printf("recieved message: %s\n", client_message);
                 return strlen(client_message);
             }
             else{
                 if(new_mn > *mn){
                     add_to_buf(new_mn, tmp, &mesbuf[100]);
                 }
+                else puts("duplicated message");
             }
         }
     }
@@ -49,6 +47,7 @@ int get_mn(char msg[BUFLEN]){
 int add_to_buf(int mn, char *msg, struct mes_buf mesbuf[100]){
   for(int i = 0; i < 100; i++){
     if(mesbuf[i].number == mn){
+        puts("buffer: duplicated message"):
         return -1;
     }
   }
@@ -56,9 +55,11 @@ int add_to_buf(int mn, char *msg, struct mes_buf mesbuf[100]){
     if(mesbuf[i].number == 0){
         mesbuf[i].number = mn;
         strncpy(mesbuf[i].msg, msg, BUFLEN);
+        puts("outrunnig message buffered");
         return 0;
     }
   }
+  puts("No free space in buffer");
   return -2;
 }
 
@@ -68,6 +69,7 @@ int get_from_buf(int nm, struct mes_buf mesbuf[100], char *tmp){
         if(mesbuf[i].number == 0){
             strcpy(tmp, mesbuf[i].msg+4);
             bzero(mesbuf[i].msg, BUFLEN);
+            puts("buffer: here i come");
             return strlen(tmp);
         }
     }
@@ -95,7 +97,6 @@ int nsend(int *mn, int sock , char *message){
     char n[BUFLEN];
     strncpy(n, "000", 3);
     nprint(inc_mn(mn), n);
-    printf("mn == %d\n", *mn);
     n[3] = ' ';
     strncpy(n+4, message, BUFLEN-4);
     strncpy(message, n, BUFLEN);
