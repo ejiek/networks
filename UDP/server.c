@@ -159,7 +159,6 @@ void *connection_handler(void *the_id){
     FD_SET(sock, &readset);
     //Receive a message from client
     while( (reason = mn_recv(sock ,client_message, &mn, &mesbuf, &timeout, &readset) > 0) ){
-        printf("reason: %d\n", reason);
         if(strncmp(client_message,"LIST",4) == 0){
             if(client_message[5] == '\0') list_themes(reply);
             else list_news(strtoul(client_message+5, NULL,10) ,reply);
