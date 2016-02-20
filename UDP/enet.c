@@ -7,6 +7,9 @@ int mn_recv(int sock, char *client_message, int *mn, struct mes_buf mesbuf[100],
     while(reason = select(sock+1, readset, NULL, NULL, timeout) > 0){
 
     if( (read_size = recv(sock , msg_with_n, BUFLEN , 0)) > 0){
+        if(strncmp(msg_with_n,"BEY",3) == 0){
+            return -1;           
+        }
         new_mn = get_mn(msg_with_n);
         if( (buf_read_size = get_from_buf(*mn+1, mesbuf, tmp)) > 0){
             *mn = *mn + 1;
@@ -24,7 +27,7 @@ int mn_recv(int sock, char *client_message, int *mn, struct mes_buf mesbuf[100],
                 if(new_mn > *mn + 1){
                     add_to_buf(new_mn, tmp, &mesbuf[100]);
                 }
-                else puts("duplicated message");
+                if(new_mn < *mn + 1) puts("duplicated message");
             }
         }
     }

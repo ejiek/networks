@@ -173,23 +173,26 @@ void *connection_handler(void *the_id){
             show_news(client_message, reply);
         }
         else if(strncmp(client_message,"HELP",4) == 0){ help(reply);}
-        else if(strncmp(client_message,"BEY",3) == 0){ break;}
         else strcpy(reply, "WRONG COMMAN\n");
 	       nsend(&rmn, sock , reply);
 	       bzero(client_message, sizeof client_message);
         bzero(reply, sizeof reply);
         timeout.tv_sec = time_to_wait;
     }
-    if(reason == 0){
-        printf(TRD"Subthread[%d]: client was inactive fo too long"RST"\n", id);
-        shut(id);
-    }
-    else{
+    switch(reason){
+    case 0 :
+        printf(TRD"Subthread[%d]: client was inactive for too long"RST"\n", id);
+        break;
+    case -1 :
+        printf(TRD"Subthread[%d]: client ended session"RST"\n", id);
+        break;
+    default :
         if(read_size <= 0){
             shut(id);
             printf(ERR"Subsocket[%d]: failed to recive"RST"\n", id);
         }
     }
+
 CH_END:
     pthread_mutex_lock(&lock);
     client_d[id].socket = 0;
