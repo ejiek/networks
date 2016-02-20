@@ -140,7 +140,7 @@ int main(int argc , char *argv[])
 void *connection_handler(void *the_id){
     //Get the socket descriptor
     int id = *(int*)the_id;
-    int read_size, sock, reason, time_to_wait = 20, mn = 0, rmn = 0;
+    int sock, reason, time_to_wait = 20, mn = 0, rmn = 0;
     char client_message[BUFLEN];
     char reply[BUFLEN];
     struct timeval timeout;
@@ -186,14 +186,8 @@ void *connection_handler(void *the_id){
     case -1 :
         printf(TRD"Subthread[%d]: client ended session"RST"\n", id);
         break;
-    default :
-        if(read_size <= 0){
-            shut(id);
-            printf(ERR"Subsocket[%d]: failed to recive"RST"\n", id);
-        }
     }
 
-CH_END:
     pthread_mutex_lock(&lock);
     client_d[id].socket = 0;
     pthread_mutex_unlock(&lock);
