@@ -87,7 +87,17 @@ int main(int argc , char *argv[])
     if( (reason = mn_recv(sock ,server_reply, &rmn, &mesbuf, &timeout, &readset)) > 0){
         printf(SERV "%s" RESET, server_reply);
     }
-	else break;
+    else{
+        switch(reason){
+        case 0 :
+            printf("Server was inactive for too long""\n");
+            break;
+        case -1 :
+            printf("Server ended session""\n");
+            break;
+        }
+	    break;
+    }
     }
 	else break;
     }
