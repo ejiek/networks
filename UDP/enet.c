@@ -47,7 +47,7 @@ int get_mn(char msg[BUFLEN]){
 int add_to_buf(int mn, char *msg, struct mes_buf mesbuf[100]){
   for(int i = 0; i < 100; i++){
     if(mesbuf[i].number == mn){
-        puts("buffer: duplicated message"):
+        puts("buffer: duplicated message");
         return -1;
     }
   }
