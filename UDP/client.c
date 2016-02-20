@@ -12,14 +12,15 @@
 
 int main(int argc , char *argv[])
 {
-    int sock, server_port, lmn = 0;
+    int sock, server_port, reason, lmn = 0, rmn = 0, time_to_wait = 3;
     struct sockaddr_in server;
     int slen = sizeof(server);
     char message[BUFLEN] , server_reply[BUFLEN], server_addr[16], server_tmp_port[6];
     struct timeval timeout;
     fd_set readset;
+    struct mes_buf mesbuf[100];
 
-    timeout.tv_sec = 3;
+    timeout.tv_sec = time_to_wait;
 
     puts("Insert server addres (default 127.0.0.1)");
     fgets(server_addr, sizeof server_addr, stdin);
@@ -83,21 +84,12 @@ int main(int argc , char *argv[])
        	    nsend(&lmn, sock , message);
             printf("sended message: %s\n", message);
         	//Receive a reply from the server
-    timeout.tv_sec = 3;
-    if(select(sock+1, &readset, NULL, NULL, &timeout) < 1)
-        break;
-		if( recv(sock , server_reply , BUFLEN , 0) < 0)
-        	{
-        	    	puts("recv failed");
-	            	break;
-        	}
-        if(strncmp(server_reply,"BEY",3) == 0){
-          puts("Server disconnected");
-          break;
-        }
-        else{ printf(SERV "%s" RESET, server_reply); }
-    	}
+    timeout.tv_sec = time_to_wait;
+    if(reason = mn_recv(sock ,server_reply, &rmn, &mesbuf, &timeout, &readset) > 0){
+        printf(SERV "%s" RESET, server_reply);
+    }
 	else break;
+    }
     }
     if( send(sock , "BEY\n\0" , BUFLEN , 0) < 0){
         puts("Send \'BEY\' failed");
