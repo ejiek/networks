@@ -21,7 +21,7 @@ int mn_recv(int sock, char *client_message, int *mn, struct mes_buf mesbuf[100],
                 return strlen(client_message);
             }
             else{
-                if(new_mn > *mn){
+                if(new_mn > *mn + 1){
                     add_to_buf(new_mn, tmp, &mesbuf[100]);
                 }
                 else puts("duplicated message");
