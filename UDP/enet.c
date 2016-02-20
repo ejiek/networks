@@ -66,7 +66,7 @@ int add_to_buf(int mn, char *msg, struct mes_buf mesbuf[100]){
 int get_from_buf(int nm, struct mes_buf mesbuf[100], char *tmp){
     char n[3];
     for(int i = 0; i < 100; i++){
-        if(mesbuf[i].number == 0){
+        if(mesbuf[i].number == nm){
             strcpy(tmp, mesbuf[i].msg+4);
             bzero(mesbuf[i].msg, BUFLEN);
             puts("buffer: here i come");
